@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 # from django.contrib.auth.forms import UserCreationForm # No longer needed
-from .forms import ShopOwnerSignUpForm, CustomerSignUpForm, CustomAuthenticationForm, ProductForm # Import the new forms and CustomAuthenticationForm
+from .forms import ShopOwnerSignUpForm, CustomerSignUpForm, CustomAuthenticationForm, ProductForm, ReviewForm # Import the new forms and CustomAuthenticationForm
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout # Import authenticate and logout
 from django.contrib.auth.decorators import login_required # For restricting access
@@ -8,7 +8,7 @@ from django.conf import settings # To get Supabase credentials
 from supabase import create_client, Client # Supabase client
 import os # For path manipulation if needed
 import uuid # For generating unique filenames
-from .models import FoodStall, Product, Order, OrderItem, Payment, Notification # Ensure Product, Order, and Payment are imported
+from .models import FoodStall, Product, Order, OrderItem, Payment, Notification, Review # Ensure Product, Order, and Payment are imported
 from urllib.parse import urlparse # For parsing image URL to get path
 from django.urls import reverse # For reverse URL resolution
 from django.http import JsonResponse, HttpResponse # For potential AJAX responses, though redirecting for now
@@ -17,7 +17,7 @@ from django.db import transaction # For atomic operations
 from django.views.decorators.http import require_POST
 from django.db.utils import IntegrityError # For IntegrityError
 from datetime import date, timedelta # For date calculations
-from django.db.models import Sum, Count # Import Sum and Count for aggregation
+from django.db.models import Sum, Count, Avg # Import Sum, Count, and Avg for aggregation
 from decimal import Decimal # Import Decimal for financial calculations
 
 # Helper function to delete image from Supabase Storage
@@ -317,19 +317,20 @@ def index_view(request):
 def notifications_view(request):
     # Fetch all notifications for the logged-in user, newest first
     user_notifications = Notification.objects.filter(user=request.user).order_by('-timestamp')
-    
     today = date.today()
     yesterday = today - timedelta(days=1)
-    
-    # Optionally, mark notifications as read when the user views this page.
-    # This is a common pattern but decide if it fits your UX.
-    # For simplicity, we can do it here. For more complex scenarios (e.g., individual read status),
-    # you'd need AJAX to update is_read.
-    # For now, we'll assume `is_read` doesn't exist or isn't being updated yet on view.
-    # Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
-    
+    # Fetch all completed orders for the user
+    completed_orders = Order.objects.filter(customer=request.user, status='Completed').order_by('-order_time')
+    # Build review lookup for (product_id, order_id)
+    user_reviews = Review.objects.filter(customer=request.user, order_id__in=completed_orders.values_list('id', flat=True))
+    review_lookup = {}
+    for review in user_reviews:
+        key = f'{review.product_id}_{review.order_id}'
+        review_lookup[key] = review
     context = {
         'notifications': user_notifications,
+        'completed_orders': completed_orders,
+        'review_lookup': review_lookup,
         'page_title': "Notifications - Golden Bites",
         'today_date': today,
         'yesterday_date': yesterday
@@ -664,22 +665,68 @@ def policy_admin_view(request):
 
 def product_detail_view(request, product_id):
     product = get_object_or_404(Product.objects.select_related('food_stall'), pk=product_id)
-    
-    # Placeholder data - you'll need to add these fields to your Product model or derive them
-    # For example, product.is_popular, product.review_count, product.total_orders
-    is_popular_tag = getattr(product, 'is_popular', True) # Default to True for styling, replace with actual logic
-    review_count_display = getattr(product, 'review_count', 30) # Placeholder
-    orders_display = getattr(product, 'total_orders', 2000) # Placeholder
+    # These attributes might be from the model or set elsewhere, retaining them for now.
+    is_popular_tag = getattr(product, 'is_popular', True) 
+    orders_display = getattr(product, 'total_orders', 2000)
 
+    # Get sorting option from request query parameters
+    sort_option = request.GET.get('sort_by', 'most_recent') # Default to 'most_recent'
+
+    # Base queryset for reviews related to the current product
+    reviews_queryset = Review.objects.filter(product=product).select_related('customer')
+
+    # Apply sorting based on the sort_option
+    if sort_option == 'highest_rating':
+        reviews = reviews_queryset.order_by('-rating', '-created_at') # Primary sort by rating desc, secondary by date desc
+    elif sort_option == 'lowest_rating':
+        reviews = reviews_queryset.order_by('rating', '-created_at')  # Primary sort by rating asc, secondary by date desc
+    elif sort_option == 'most_recent': 
+        reviews = reviews_queryset.order_by('-created_at')
+    else: # Fallback to 'most_recent' if an invalid sort_option is provided
+        reviews = reviews_queryset.order_by('-created_at')
+        sort_option = 'most_recent' # Explicitly set sort_option to the fallback for context
+
+    # Calculate review statistics using Django ORM aggregation
+    review_stats = reviews_queryset.aggregate(
+        total_reviews_val=Count('id'),
+        average_rating_val=Avg('rating')
+    )
+    
+    total_reviews = review_stats.get('total_reviews_val', 0)
+    average_rating = review_stats.get('average_rating_val')
+
+    if average_rating is not None:
+        average_rating = round(average_rating, 1) # Round to one decimal place
+    else:
+        average_rating = 0.0 # Default if no reviews or ratings
+
+    # Calculate rating distribution (e.g., count of 5-star, 4-star, etc., reviews)
+    rating_distribution_query = reviews_queryset.values('rating').annotate(count=Count('id')).order_by('-rating')
+    
+    # Initialize rating_distribution_dict with all possible ratings (1-5) having a count of 0
+    rating_distribution_dict = {i: 0 for i in range(1, 6)}
+    for item in rating_distribution_query:
+        if item['rating'] is not None: # Ensure rating is not None (e.g. for reviews without a rating value)
+            rating_distribution_dict[item['rating']] = item['count']
+            
     context = {
         'product': product,
         'food_stall_name': product.food_stall.stall_name if product.food_stall else "Golden Bites",
         'is_popular_tag': is_popular_tag,
-        'review_count_display': review_count_display,
         'orders_display': orders_display,
         'page_title': product.product_name,
-        # For bottom nav active state
-        'current_page_name': request.resolver_match.url_name 
+        'current_page_name': request.resolver_match.url_name,
+        
+        'reviews': reviews,  # Sorted list of reviews
+        'total_reviews': total_reviews,
+        'average_rating': average_rating,
+        'rating_distribution': rating_distribution_dict, # Dict with rating counts, e.g., {5: 10, 4: 8, ...}
+        'current_sort_option': sort_option, # To highlight the active sort option in the template
+        'sort_options': { # To generate sort links/dropdown in the template
+            'most_recent': 'Most Recent',
+            'highest_rating': 'Highest Rating',
+            'lowest_rating': 'Lowest Rating',
+        }
     }
     return render(request, 'product-detail.html', context)
 
@@ -754,7 +801,71 @@ def reset_password_view(request):
     return render(request, 'reset-password.html')
 
 def review_view(request):
-    return render(request, 'review.html')
+    from django.shortcuts import redirect
+    from django.contrib import messages
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            product_id = form.cleaned_data['product_id']
+            order_id = form.cleaned_data['order_id']
+            rating = form.cleaned_data['rating']
+            comment = form.cleaned_data['comment']
+            # Validate product_id and order_id
+            if not product_id or not order_id:
+                messages.error(request, "Invalid review submission: missing product or order information.")
+                return redirect('home')
+            product = Product.objects.filter(pk=product_id).first()
+            order = Order.objects.filter(pk=order_id).first()
+            if not product or not order:
+                messages.error(request, "Invalid product or order for review.")
+                return redirect('home')
+            review = Review.objects.filter(customer=request.user, product_id=product_id, order_id=order_id).first()
+            if review:
+                review.rating = rating
+                review.comment = comment
+                review.save()
+                messages.success(request, "Your review has been updated!")
+            else:
+                Review.objects.create(
+                    customer=request.user,
+                    product_id=product_id,
+                    order_id=order_id,
+                    rating=rating,
+                    comment=comment
+                )
+                messages.success(request, "Thank you for your review!")
+            return redirect('notifications')
+        else:
+            # Form is invalid: get IDs from POST and fetch product/order for rendering
+            product_id = request.POST.get('product_id')
+            order_id = request.POST.get('order_id')
+            product = Product.objects.filter(pk=product_id).first() if product_id else None
+            order = Order.objects.filter(pk=order_id).first() if order_id else None
+            messages.error(request, "There was an error with your review submission. Please check the form and try again.")
+            return render(request, 'review.html', {'form': form, 'product': product, 'order': order})
+    else:
+        product_id = request.GET.get('product_id')
+        order_id = request.GET.get('order_id')
+        # Validate product_id and order_id
+        if not product_id or not order_id:
+            messages.error(request, "Missing product or order. Please access the review page from your orders.")
+            return redirect('home')
+        product = Product.objects.filter(pk=product_id).first()
+        order = Order.objects.filter(pk=order_id).first()
+        if not product or not order:
+            messages.error(request, "Invalid product or order. Please access the review page from your orders.")
+            return redirect('home')
+        review = Review.objects.filter(customer=request.user, product_id=product_id, order_id=order_id).first()
+        if review:
+            form = ReviewForm(initial={
+                'product_id': product_id,
+                'order_id': order_id,
+                'rating': review.rating,
+                'comment': review.comment
+            })
+        else:
+            form = ReviewForm(initial={'product_id': product_id, 'order_id': order_id})
+    return render(request, 'review.html', {'form': form, 'product': product, 'order': order})
 
 def sign_in_view(request):
     if request.method == 'POST':
@@ -772,16 +883,23 @@ def sign_in_view(request):
                     return redirect('dashboard') 
                 else:
                     return redirect('home')
-            else:
-                messages.error(request, 'Invalid username or password.')
-        else:
-            # Form is not valid, pass errors to template
-            for field, errors in form.errors.items(): # Field errors
-                for error in errors:
-                    messages.error(request, f"{form.fields[field].label if field != '__all__' else 'Login error'}: {error}")
-            if form.non_field_errors(): # Non-field errors (e.g. user inactive)
-                 for error in form.non_field_errors():
-                    messages.error(request, error)
+            else: # User authentication failed (user is None)
+                # Check for specific non-field errors first (e.g., inactive account)
+                non_field_errors = form.non_field_errors()
+                if non_field_errors:
+                    for error in non_field_errors:
+                        messages.error(request, error)
+                else:
+                    # Generic error if no specific non-field error but auth failed
+                    messages.error(request, 'Please enter a correct username and password. Note that both fields may be case-sensitive.')
+        else: # Form is not valid
+            # Add field-specific errors
+            for field in form.errors:
+                for error in form.errors[field]:
+                    if field == '__all__':
+                        messages.error(request, error) # Non-field errors already handled if user was None
+                    else:
+                        messages.error(request, f"{form.fields[field].label}: {error}")
 
     else: # GET request
         form = CustomAuthenticationForm()

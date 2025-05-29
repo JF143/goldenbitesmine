@@ -306,6 +306,7 @@
             /* For multi-line clamp: */
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -578,7 +579,7 @@
                 {% if products %}
                     <div class="product-grid">
                         {% for product in products %}
-                        <a href="{% url 'product_detail' product.id %}" class="product-card"> {# Link to product detail or shop page later #}
+                        <a href="{% url 'product_detail' product.id %}" class="product-card" data-product-name="{{ product.product_name|lower }}" data-product-description="{{ product.details|lower|default_if_none:'' }}" data-product-category="{{ product.category|lower|default_if_none:'' }}"> 
                             <div class="product-card-image-container">
                                 {% if product.image_url %}
                                     <img src="{{ product.image_url }}" alt="{{ product.product_name }}">
@@ -673,50 +674,36 @@
             const originalNoItemsSubtext = noItemsMessage ? noItemsMessage.querySelector('.subtext').textContent : "No items available at the moment. Please check back later.";
 
             function filterProductsOnHome() {
-                if (!productGrid || !noItemsMessage) return; // Essential elements are missing
-
-                const searchTerm = homeSearchInput.value.toLowerCase().trim();
-                let visibleCount = 0;
-
-                allProductCards.forEach(card => {
-                    const productNameElement = card.querySelector('.product-info .name');
-                    const stallNameElement = card.querySelector('.product-info .stall-name');
-                    
-                    const productName = productNameElement ? productNameElement.textContent.toLowerCase() : '';
-                    const stallName = stallNameElement ? stallNameElement.textContent.toLowerCase() : '';
-                    
-                    if (productName.includes(searchTerm) || stallName.includes(searchTerm)) {
-                        card.style.display = ''; // Show card
-                        visibleCount++;
-                    } else {
-                        card.style.display = 'none'; // Hide card
-                    }
-                });
-                
-                if (visibleCount === 0 && searchTerm !== '') {
-                    productGrid.style.display = 'none';
-                    noItemsMessage.style.display = 'block'; // Or 'flex' if it uses flex for centering
-                    noItemsMessage.querySelector('p').textContent = 'No Matches Found';
-                    noItemsMessage.querySelector('.subtext').textContent = 'Try a different search term or browse categories.';
-                } else if (visibleCount === 0 && searchTerm === '' && allProductCards.length === 0) {
-                    // This case handles when there are no products initially and search is empty
-                    productGrid.style.display = 'none';
-                    noItemsMessage.style.display = 'block';
-                    noItemsMessage.querySelector('p').textContent = originalNoItemsText;
-                    noItemsMessage.querySelector('.subtext').textContent = originalNoItemsSubtext;
-                } else if (allProductCards.length > 0) { // Only show grid if there are cards to show
-                    productGrid.style.display = ''; // Or 'grid' if that was the original display property
-                    noItemsMessage.style.display = 'none';
-                } else { // No products at all, and no search term
-                     productGrid.style.display = 'none';
-                     noItemsMessage.style.display = 'block'; // Show the original no items message
-                }
-            }
+    const searchTerm = homeSearchInput.value.toLowerCase().trim();
+    let visibleCount = 0;
+    allProductCards.forEach(card => {
+        const name = card.dataset.productName || '';
+        const desc = card.dataset.productDescription || '';
+        const category = card.dataset.productCategory || '';
+        if (
+            name.includes(searchTerm) ||
+            desc.includes(searchTerm) ||
+            category.includes(searchTerm)
+        ) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    if (visibleCount === 0) {
+        if (productGrid) productGrid.style.display = 'none';
+        if (noItemsMessage) noItemsMessage.style.display = 'block';
+    } else {
+        if (productGrid) productGrid.style.display = 'grid';
+        if (noItemsMessage) noItemsMessage.style.display = 'none';
+    }
+}
 
             if (homeSearchInput && homeSearchButton) {
                 homeSearchInput.addEventListener('input', filterProductsOnHome);
                 homeSearchButton.addEventListener('click', filterProductsOnHome);
-                    }
+            }
 
             // Initial state check for the noItemsMessage if products are initially empty
             if (allProductCards.length === 0 && noItemsMessage && productGrid) {
@@ -747,7 +734,7 @@
                         categoriesScroll.scrollLeft += e.deltaY;
                         scrolledHorizontally = true;
                     }
-
+            
                     if (scrolledHorizontally) {
                         // If we did scroll horizontally, prevent the default vertical scroll of the page.
                         e.preventDefault();

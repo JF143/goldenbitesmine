@@ -117,7 +117,7 @@
             border-color: #1877f2;
             box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2);
         }
-        
+
         form textarea {
             min-height: 80px; /* Default height for textareas */
             resize: vertical;
@@ -210,11 +210,11 @@
                     <div class="image-preview-box" id="imagePreviewBox">
                         <i class="fas fa-camera camera-icon" id="cameraIcon"></i>
                         <img src="" alt="Image Preview" id="imagePreview" style="display: none;"/>
-                    </div>
+            </div>
                     {{ form.product_image.errors }}
                     {{ form.product_image }}
                     {% if form.product_image.help_text %}<span class="helptext">{{ form.product_image.help_text|safe }}</span>{% endif %}
-                </div>
+            </div>
 
                 {{ form.product_name.errors }}
                 <p>
@@ -270,15 +270,15 @@
 
                 imageUploadInput.addEventListener('change', function(event) {
                     const file = event.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
                             imagePreview.src = e.target.result;
                             imagePreview.style.display = 'block';
                             cameraIcon.style.display = 'none';
-                        }
+                    }
                         reader.readAsDataURL(file);
-                    } else {
+                            } else {
                         imagePreview.src = '';
                         imagePreview.style.display = 'none';
                         cameraIcon.style.display = 'block';

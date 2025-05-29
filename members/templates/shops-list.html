@@ -289,7 +289,7 @@
             {% if food_stalls %}
                 <div class="shop-cards-grid" id="shopCardsGrid">
                     {% for stall in food_stalls %}
-                        <a href="{% url 'shop_products' stall_owner_id=stall.owner_id %}" class="shop-card" data-stall-name="{{ stall.stall_name|lower }}">
+                        <a href="{% url 'shop_products' stall_owner_id=stall.owner_id %}" class="shop-card" data-stall-name="{{ stall.stall_name|lower }}" data-stall-address="{{ stall.owner.address|lower|default:'' }}">
                             <div class="shop-card-image-placeholder">
                                 <i class="fas fa-store"></i>
                             </div>
@@ -352,6 +352,30 @@
             const searchButton = document.getElementById('shopSearchButton');
             const shopCardsGrid = document.querySelector('.shop-cards-grid');
             const allShopCards = shopCardsGrid ? Array.from(shopCardsGrid.getElementsByClassName('shop-card')) : [];
+function filterShops() {
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    let visibleCount = 0;
+    allShopCards.forEach(card => {
+        const name = card.dataset.stallName || '';
+        const address = card.dataset.stallAddress || '';
+        if (name.includes(searchTerm) || address.includes(searchTerm)) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    if (visibleCount === 0) {
+        if (shopCardsGrid) shopCardsGrid.style.display = 'none';
+        if (noSearchResultsMessage) noSearchResultsMessage.style.display = 'block';
+    } else {
+        if (shopCardsGrid) shopCardsGrid.style.display = 'grid';
+        if (noSearchResultsMessage) noSearchResultsMessage.style.display = 'none';
+    }
+}
+// Attach events
+if (searchInput) searchInput.addEventListener('input', filterShops);
+if (searchButton) searchButton.addEventListener('click', filterShops);
             const noShopsMessage = document.querySelector('.no-shops-message'); // Original message if no stalls
             const noSearchResultsMessage = document.querySelector('.no-search-results-message');
 

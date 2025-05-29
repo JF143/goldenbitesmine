@@ -1,4 +1,5 @@
 {% load static %}
+{% load crispy_forms_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -459,10 +460,47 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="back-icon">&#8592;</div>
-            <h1 class="centered-shop-name" id="shopNameHeading">Your Shop</h1>
-            <div class="settings-icon" id="settingsIcon"></div>
+            <div class="back-icon" onclick="window.history.back()">&#8592;</div>
+            <h1 class="centered-shop-name" id="shopNameHeading">Review Product</h1>
         </div>
+
+        {% if messages %}
+            <ul class="messages" style="margin: 20px 0; padding: 0; list-style: none;">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}" style="background: #e3f2fd; color: #1976d2; padding: 10px 16px; border-radius: 8px; margin-bottom: 10px;">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if form %}
+        <div class="review-form-section" style="background: #fff; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); padding: 28px 22px; margin: 30px 0 0 0; max-width: 430px; margin-left: auto; margin-right: auto;">
+            <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 18px; color: #222;">{{ product.product_name }}</h2>
+            <div style="font-size: 14px; color: #888; margin-bottom: 18px;">Order #{{ order.id }} &middot; {{ order.order_time|date:'M d, Y' }}</div>
+            <form method="post" style="display: flex; flex-direction: column; gap: 18px;">
+                {% csrf_token %}
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+                    <label for="id_rating" style="font-weight: 600; color: #333;">Your Rating:</label>
+<select name="rating" id="id_rating" style="font-size: 1.1rem; padding: 6px; border-radius: 6px; border: 1px solid #e0e0e0; width: 120px;">
+    <option value="">Select rating</option>
+    {% for i in "12345" %}
+        <option value="{{ i }}" {% if form.rating.value == i|stringformat:"s" %}selected{% endif %}>{{ i }} Star{% if i != "1" %}s{% endif %}</option>
+    {% endfor %}
+</select>
+{% if form.rating.errors %}
+    <div style="color: #e74c3c; font-size: 0.95rem; margin-top: 5px;">{{ form.rating.errors.0 }}</div>
+{% endif %}
+                </div>
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+                    <label for="id_comment" style="font-weight: 600; color: #333;">Your Review:</label>
+                    {{ form.comment }}
+                    {% if form.comment.errors %}<div class="form-error" style="color: #d32f2f; font-size: 13px;">{{ form.comment.errors }}</div>{% endif %}
+                </div>
+                {{ form.product_id }}
+                {{ form.order_id }}
+                <button type="submit" class="btn btn-primary" style="background: #4a90e2; color: #fff; border: none; border-radius: 8px; padding: 12px 0; font-size: 1.1rem; font-weight: 600; margin-top: 10px; cursor: pointer; transition: background 0.2s;">Submit Review</button>
+            </form>
+        </div>
+        {% endif %}
 
         <div class="reviews-header">
             <div>
@@ -785,5 +823,37 @@
         // Only keep code that displays real data from the backend
         // ... existing code ...
     </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const starRating = document.getElementById('starRating');
+    const ratingInput = document.getElementById('ratingInput');
+    if (starRating && ratingInput) {
+        const stars = starRating.querySelectorAll('.star');
+        stars.forEach((star, idx) => {
+            star.addEventListener('mouseenter', function() {
+                highlightStars(idx + 1);
+            });
+            star.addEventListener('mouseleave', function() {
+                highlightStars(parseInt(ratingInput.value));
+            });
+            star.addEventListener('click', function() {
+                ratingInput.value = idx + 1;
+                highlightStars(idx + 1);
+            });
+        });
+        function highlightStars(rating) {
+            stars.forEach((star, i) => {
+                if (i < rating) {
+                    star.querySelector('i').style.color = '#ffc107';
+                } else {
+                    star.querySelector('i').style.color = '#e0e0e0';
+                }
+            });
+        }
+        // Initialize on page load
+        highlightStars(parseInt(ratingInput.value));
+    }
+});
+</script>
 </body>
 </html>

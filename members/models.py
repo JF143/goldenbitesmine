@@ -144,9 +144,9 @@ class OrderItem(models.Model):
         return f"{self.quantity} of {self.product.product_name} for Order {self.order.id}"
 
 class Review(models.Model):
-    # id will be added automatically by Django
     customer = models.ForeignKey(User, on_delete=models.CASCADE) # customer_id in SQL
     product = models.ForeignKey(Product, on_delete=models.CASCADE) # product_id in SQL
+    order = models.ForeignKey(Order, on_delete=models.CASCADE) # order_id in SQL (added)
     rating = models.SmallIntegerField() # Your SQL has CHECK (rating >= 1 AND rating <= 5)
     comment = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True) # Corresponds to TIMESTAMPTZ DEFAULT now()

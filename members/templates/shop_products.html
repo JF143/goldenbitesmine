@@ -363,7 +363,7 @@
         {% if products %}
             <div class="product-grid">
                 {% for product in products %}
-                <a href="{% url 'product_detail' product.id %}" class="product-card" data-product-name="{{ product.product_name|lower }}" data-product-description="{{ product.details|lower|default_if_none:'' }}">
+                <a href="{% url 'product_detail' product.id %}" class="product-card" data-product-name="{{ product.product_name|lower }}" data-product-description="{{ product.details|lower|default_if_none:'' }}" data-product-category="{{ product.category|lower|default_if_none:'' }}">
                     <div class="product-card-image-container">
                         {% if product.image_url %}
                             <img src="{{ product.image_url }}" alt="{{ product.product_name }}">
@@ -410,6 +410,32 @@ document.addEventListener('DOMContentLoaded', function () {
     const originalNoProductsMessage = document.querySelector('.main-content-shop-products .no-items-message:not(#noSearchResultsMessage)');
 
     function filterShopProducts() {
+    if (!productGrid) return;
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    let visibleCount = 0;
+    allProductCards.forEach(card => {
+        const name = card.dataset.productName || '';
+        const desc = card.dataset.productDescription || '';
+        const category = card.dataset.productCategory || '';
+        if (
+            name.includes(searchTerm) ||
+            desc.includes(searchTerm) ||
+            category.includes(searchTerm)
+        ) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    if (visibleCount === 0) {
+        if (productGrid) productGrid.style.display = 'none';
+        if (noResultsMessage) noResultsMessage.style.display = 'block';
+    } else {
+        if (productGrid) productGrid.style.display = 'grid';
+        if (noResultsMessage) noResultsMessage.style.display = 'none';
+    }
+}
         if (!productGrid) return; // No products to filter
 
         const searchTerm = searchInput.value.toLowerCase().trim();

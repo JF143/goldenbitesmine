@@ -1,5 +1,6 @@
 {% load static %}
 {% load humanize %}
+{% load review_extras %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -504,6 +505,20 @@
                                 <div class="notification-actions">
                                     {% if notification.order %}
                                     <button class="notification-btn view-order-btn" data-order-id="{{ notification.order.id }}">View Order</button>
+                                    {% for item in notification.order.orderitem_set.all %}
+                                        {% with key=item.product.id|stringformat:'s'|add:'_'|add:notification.order.id|stringformat:'s' %}
+                                            {% with review=review_lookup|get_review:key %}
+                                                <li style="margin-bottom: 4px;">
+                                                    <span style="font-weight: 500;">{{ item.product.product_name }}</span>
+                                                    {% if review %}
+                                                        <a href="{% url 'review' %}?product_id={{ item.product.id }}&order_id={{ notification.order.id }}" class="notification-btn review-btn" style="margin-left: 10px;">Edit Review</a>
+                                                    {% else %}
+                                                        <a href="{% url 'review' %}?product_id={{ item.product.id }}&order_id={{ notification.order.id }}" class="notification-btn review-btn" style="margin-left: 10px;">Review</a>
+                                                    {% endif %}
+                                                </li>
+                                            {% endwith %}
+                                        {% endwith %}
+                                    {% endfor %}
                                     {% endif %}
                                     {% if not notification.is_read %}
                                     <button class="notification-btn mark-read" data-id="{{ notification.id }}">Mark as read</button>
@@ -534,6 +549,37 @@
                 <div class="empty-text">No notifications yet</div>
                 <div class="empty-subtext">We'll notify you when there's something new</div>
                 <button class="action-btn primary">Refresh</button>
+            </div>
+
+            <div class="completed-orders-section" style="margin-top: 30px;">
+                <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 15px;">Your Completed Orders</h2>
+                {% if completed_orders %}
+                    {% for order in completed_orders %}
+                        <div class="completed-order-card" style="background: #fff; border-radius: 10px; margin-bottom: 18px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                            <div style="font-weight: 600; margin-bottom: 5px;">Order #{{ order.queue_id|default:order.id }} <span style="font-size: 13px; color: #388e3c;">({{ order.order_time|date:'M d, Y' }})</span></div>
+                            <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Total: ₱{{ order.total_price|intcomma }}</div>
+                            <div style="font-size: 14px; color: #888; margin-bottom: 8px;">Items:</div>
+                            <ul style="margin-bottom: 10px;">
+                                {% for item in order.orderitem_set.all %}
+                                    {% with key=item.product.id|stringformat:'s'|add:'_'|add:order.id|stringformat:'s' %}
+                                        {% with review=review_lookup|get_review:key %}
+                                            <li style="margin-bottom: 4px;">
+                                                <span style="font-weight: 500;">{{ item.product.product_name }}</span>
+                                                {% if review %}
+                                                    <a href="{% url 'review' %}?product_id={{ item.product.id }}&order_id={{ order.id }}" class="notification-btn review-btn" style="margin-left: 10px;">Edit Review</a>
+                                                {% else %}
+                                                    <a href="{% url 'review' %}?product_id={{ item.product.id }}&order_id={{ order.id }}" class="notification-btn review-btn" style="margin-left: 10px;">Review</a>
+                                                {% endif %}
+                                            </li>
+                                        {% endwith %}
+                                    {% endwith %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color: #888;">You have no completed orders yet.</p>
+                {% endif %}
             </div>
         </main>
         

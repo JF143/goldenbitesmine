@@ -1,5 +1,6 @@
 {% load static %}
-{% load humanize %} {# For currency and other formatting #}
+{% load humanize %}
+{% load custom_filters %} {# For get_item and other custom filters #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -351,6 +352,135 @@
             text-decoration: none; font-weight: 500;
             }
 
+        /* Review Section Enhancements */
+        .reviews-section {
+            padding-top: 15px;
+        }
+        .review-stats-overview {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        .average-rating-display {
+            margin-right: 20px;
+            text-align: center;
+        }
+        .average-rating-display .rating-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-color-dark);
+            line-height: 1;
+        }
+        .average-rating-display .stars i {
+            font-size: 1rem;
+            color: var(--star-color);
+        }
+        .average-rating-display .total-reviews-count {
+            font-size: 0.85rem;
+            color: var(--text-color-medium);
+            margin-top: 5px;
+        }
+        .rating-distribution {
+            flex-grow: 1;
+        }
+        .rating-bar-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+            font-size: 0.8rem;
+        }
+        .rating-bar-label {
+            width: 45px; /* "5 star", "4 star" etc. */
+            color: var(--text-color-medium);
+            display: flex;
+            align-items: center;
+        }
+        .rating-bar-label i {
+            color: var(--star-color);
+            margin-left: 3px;
+            font-size:0.7rem;
+        }
+        .rating-bar-bg {
+            flex-grow: 1;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            margin: 0 8px;
+            overflow: hidden;
+        }
+        .rating-bar-fill {
+            height: 100%;
+            background-color: var(--star-color);
+            border-radius: 4px;
+            transition: width 0.5s ease-in-out;
+        }
+        .rating-bar-count {
+            min-width: 20px; /* Space for count number */
+            text-align: right;
+            color: var(--text-color-medium);
+        }
+        .reviews-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .reviews-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-color-dark);
+        }
+        .sort-reviews-dropdown select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color-soft);
+            background-color: #fff;
+            font-size: 0.9rem;
+            color: var(--text-color-medium);
+            cursor: pointer;
+        }
+        .review-card {
+            background: #fff;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .reviewer-name {
+            font-weight: 600;
+            color: var(--text-color-dark);
+        }
+        .review-rating .fa-star {
+            color: var(--star-color);
+        }
+        .review-rating .fa-star.empty {
+            color: #e0e0e0;
+        }
+        .review-content {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--text-color-medium);
+            margin-bottom: 8px;
+        }
+        .review-date {
+            font-size: 0.8rem;
+            color: var(--text-color-light);
+        }
+        .no-reviews-message {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-color-medium);
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -420,6 +550,126 @@
                         <p class="ingredients-text">{{ product.ingredients|linebreaksbr }}</p> {# Or format as list if ingredients are comma-separated #}
                     </section>
                 {% endif %}
+
+                <hr class="section-divider">
+                <section class="reviews-section" style="margin-top: 40px;">
+    <!-- Reviews Summary -->
+    <div class="reviews-summary" style="display: flex; align-items: flex-start; gap: 32px; margin-bottom: 30px; flex-wrap: wrap;">
+        <div class="average-rating-block" style="background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 24px 32px; min-width: 180px; text-align: center;">
+            <div class="average-rating-value" style="font-size: 2.5rem; font-weight: 700; color: var(--primary-brand-color);">{{ average_rating|default:"0.0" }}</div>
+            <div class="average-stars" style="margin: 8px 0 6px 0;">
+                {% for i in "12345" %}
+                    {% if i|add:0 <= average_rating %}
+                        <i class="fas fa-star" style="font-size: 1.3rem; color: #ffc107;"></i>
+                    {% else %}
+                        <i class="fas fa-star" style="font-size: 1.3rem; color: #e0e0e0;"></i>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="total-reviews-count" style="font-size: 1.05rem; color: #888;">{{ total_reviews }} review{{ total_reviews|pluralize }}</div>
+        </div>
+        <div class="rating-distribution-block" style="flex: 1; min-width: 220px;">
+            {% for star in "54321" %}
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                    <span style="width: 34px; color: #555; font-size: 1rem;">{{ star }} <i class="fas fa-star" style="color: #ffc107;"></i></span>
+                    <div style="flex: 1; background: #e0e0e0; border-radius: 6px; height: 10px; position: relative;">
+    {% with star_count=rating_distribution|get_item:star|default:0 %}
+        {% if total_reviews > 0 %}
+            {% widthratio star_count total_reviews 100 as percent %}
+            <div style="background: #ffc107; border-radius: 6px; height: 100%; width: {{ percent }}%;"></div>
+        {% else %}
+            <div style="background: #ffc107; border-radius: 6px; height: 100%; width: 0%;"></div>
+        {% endif %}
+    {% endwith %}
+</div>
+                    <span style="width: 28px; text-align: right; color: #888; font-size: 1rem;">{{ rating_distribution|get_item:star|default:0 }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <!-- Review Submission Form was here -->
+
+                    <div class="reviews-header">
+                        <h2 class="reviews-title">Customer Reviews</h2>
+                        <div class="sort-reviews-dropdown">
+                            <form method="GET" action="" id="sortReviewsForm">
+                                <select name="sort_by" id="sort_by_select" onchange="document.getElementById('sortReviewsForm').submit();">
+                                    {% for key, value in sort_options.items %}
+                                        <option value="{{ key }}" {% if key == current_sort_option %}selected{% endif %}>{{ value }}</option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        </div>
+                    </div>
+
+                    {% if total_reviews > 0 %}
+                        <div class="review-stats-overview">
+                            <div class="average-rating-display">
+                                <div class="rating-value">{{ average_rating|default:"0.0" }}</div>
+                                <div class="stars">
+                                    {% with avg_rating_int_part=average_rating|default:0.0|stringformat:".0f"|add:0 %}
+                                    {% for i in "12345" %}
+                                        <i class="fas fa-star {% if i|add:0 > avg_rating_int_part %}empty{% endif %}"></i>
+                                    {% endfor %}
+                                    {% endwith %}
+                                </div>
+                                <div class="total-reviews-count">{{ total_reviews }} review{{ total_reviews|pluralize }}</div>
+                            </div>
+                            <div class="rating-distribution">
+                                {% for star_count in 5|rjust:0|slice:"5:"|make_list|slice:"::-1" %} {# Iterate 5 down to 1 #}
+                                    {% with current_star_rating=star_count|add:1 %}
+                                    {% with count_for_star=rating_distribution|default_if_none:""|get_item:current_star_rating|default:0 %}
+                                    {% if total_reviews > 0 and count_for_star > 0 %}
+                                        {% widthratio count_for_star total_reviews 100 as percentage_for_star %}
+                                        <div class="rating-bar-container">
+                                            <span class="rating-bar-label">{{ current_star_rating }} star{% if current_star_rating != 1 %}s{% endif %}</span>
+                                            <div class="rating-bar-bg">
+                                                <div class="rating-bar-fill" style="width: {{ percentage_for_star }}%;"></div>
+                                            </div>
+                                            <span class="rating-bar-count">{{ count_for_star }}</span>
+                                        </div>
+                                    {% else %}
+                                        <div class="rating-bar-container">
+                                            <span class="rating-bar-label">{{ current_star_rating }} star{% if current_star_rating != 1 %}s{% endif %}</span>
+                                            <div class="rating-bar-bg">
+                                                <div class="rating-bar-fill" style="width: 0%;"></div>
+                                            </div>
+                                            <span class="rating-bar-count">0</span>
+                                        </div>
+                                    {% endif %}
+                                    {% endwith %}
+                                    {% endwith %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        {% for review in reviews %}
+    <div class="review-card" style="background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 20px 24px; margin-bottom: 18px;">
+        <div class="review-header" style="display: flex; align-items: center; gap: 14px; margin-bottom: 10px;">
+            <div class="reviewer-avatar" style="width: 42px; height: 42px; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 600; color: #4a90e2;">
+                {{ review.customer.username|first|default:"U"|upper }}
+            </div>
+            <div>
+                <div class="reviewer-name" style="font-weight: 600; color: #333; font-size: 1.1rem;">{{ review.customer.username|default:"Anonymous" }}</div>
+                <div class="review-date" style="font-size: 0.95rem; color: #888;">{{ review.created_at|naturaltime }}</div>
+            </div>
+            <div class="review-rating" style="margin-left:auto;">
+                {% for i in "12345" %}
+                    {% if i|add:0 <= review.rating %}
+                        <i class="fas fa-star" style="font-size: 1.1rem; color: #ffc107;"></i>
+                    {% else %}
+                        <i class="fas fa-star" style="font-size: 1.1rem; color: #e0e0e0;"></i>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="review-content" style="font-size: 1.08rem; color: #222; margin-top: 3px;">{{ review.comment|linebreaksbr }}</div>
+    </div>
+{% endfor %}
+                    {% else %}
+                        <p class="no-reviews-message">Be the first to review this product!</p>
+                    {% endif %}
+                </section>
 
             </main>
 
@@ -576,6 +826,54 @@
             });
         }
     });
+        // JavaScript for review sort dropdown
+        const sortReviewsForm = document.getElementById('sortReviewsForm');
+        const sortBySelect = document.getElementById('sort_by_select');
+
+        if (sortBySelect && sortReviewsForm) {
+            // Set current URL to form action to preserve other query params if any
+            // However, for simple sort, window.location.href is fine.
+            // sortReviewsForm.action = window.location.pathname;
+
+            sortBySelect.addEventListener('change', function() {
+                // Construct URL with the selected sort option
+                const selectedSortOption = this.value;
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('sort_by', selectedSortOption);
+                window.location.href = currentUrl.toString();
+            });
+        }
+        // Interactive Star Rating Widget
+        const starRating = document.getElementById('starRating');
+        const ratingInput = document.getElementById('ratingInput');
+        if (starRating && ratingInput) {
+            const stars = starRating.querySelectorAll('.star');
+            stars.forEach((star, idx) => {
+                star.addEventListener('mouseenter', function() {
+                    highlightStars(idx + 1);
+                });
+                star.addEventListener('mouseleave', function() {
+                    highlightStars(parseInt(ratingInput.value));
+                });
+                star.addEventListener('click', function() {
+                    ratingInput.value = idx + 1;
+                    highlightStars(idx + 1);
+                });
+            });
+            function highlightStars(rating) {
+                stars.forEach((star, i) => {
+                    if (i < rating) {
+                        star.querySelector('i').classList.add('selected');
+                        star.querySelector('i').style.color = '#ffc107';
+                    } else {
+                        star.querySelector('i').classList.remove('selected');
+                        star.querySelector('i').style.color = '#e0e0e0';
+                    }
+                });
+            }
+            // Initialize on page load
+            highlightStars(parseInt(ratingInput.value));
+        }
     </script>
 </body>
 </html>

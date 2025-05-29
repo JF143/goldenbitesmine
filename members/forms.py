@@ -165,3 +165,17 @@ class ProductForm(forms.ModelForm):
         # Ensure labels for ingredients and details are set if not using *args from screenshot
         self.fields['ingredients'].label = "Ingredients"
         self.fields['details'].label = "Details" 
+
+class ReviewForm(forms.Form):
+    rating = forms.ChoiceField(
+        choices=[(i, str(i)) for i in range(1, 6)],
+        widget=forms.RadioSelect,
+        label="Rating *"
+    )
+    comment = forms.CharField(
+        widget=forms.Textarea(attrs={'placeholder': 'Write your review...', 'rows': 3}),
+        required=False,
+        label="Comment"
+    )
+    product_id = forms.IntegerField(widget=forms.HiddenInput())
+    order_id = forms.IntegerField(widget=forms.HiddenInput()) 
