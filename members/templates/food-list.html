@@ -1,0 +1,513 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Menu Management - {{ food_stall_name|default:"Golden Bites" }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #0047ab;
+            --light-blue-bg: #e6f0ff;
+            --text-dark: #333;
+            --text-medium: #555;
+            --text-light: #777;
+            --border-color: #e0e0e0;
+            --card-bg: #ffffff;
+            --page-bg: #f5f7fa;
+            --danger-color: #dc3545;
+            --danger-hover: #c82333;
+            --edit-color: #4a7bca; /* Softer blue for edit */
+            --edit-hover: #3a6cb0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--page-bg);
+            color: var(--text-dark);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app-container {
+            max-width: 430px;
+            margin: 0 auto;
+            background-color: var(--page-bg); /* Page background for the container */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Ensures items are spaced out */
+            padding: 15px 20px;
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-dark);
+            text-align: center;
+            flex-grow: 1; /* Allows title to take available space */
+        }
+        .header-logo {
+            width: 35px;
+            height: 35px;
+            flex-shrink: 0; /* Prevents logo from shrinking */
+        }
+         /* Placeholder for a potential left-side icon/button if needed */
+        .header-left-placeholder {
+            width: 35px; /* Match logo width for balance */
+            flex-shrink: 0;
+        }
+
+
+        /* Main Content Area */
+        .main-content {
+            flex-grow: 1;
+            padding: 20px 15px 80px; /* Padding bottom for nav bar */
+            overflow-y: auto;
+            background-color: var(--card-bg); /* White background for main content area */
+        }
+
+        /* Messages */
+        .messages-section {
+            margin-bottom: 15px;
+        }
+        .messages { list-style: none; padding: 0; margin:0; }
+        .messages li {
+            padding: 12px 18px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .messages li .fas { font-size: 16px; }
+        .messages li.success { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+        .messages li.error { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+        .messages li.warning { background-color: #fff3cd; color: #664d03; border: 1px solid #ffecb5; }
+        .messages li.info { background-color: #cff4fc; color: #055160; border: 1px solid #b6effb; }
+
+
+        /* Category Filter */
+        .category-filter-container {
+            margin-bottom: 20px;
+            padding: 5px 0;
+            display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .category-filter-container::-webkit-scrollbar { display: none; }
+
+        .category-button {
+            display: inline-block;
+            padding: 8px 18px;
+            margin-right: 10px;
+            border-radius: 20px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-medium);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+        .category-button:hover {
+            background-color: #e9ecef;
+            border-color: #ced4da;
+        }
+        .category-button.active {
+            background-color: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+            font-weight: 600;
+        }
+        .category-button:last-child {
+            margin-right: 0;
+        }
+        
+        .item-count-header {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        /* Product Cards */
+        .product-grid {
+            display: grid;
+            gap: 15px;
+            /* For single column on small screens, can adjust with media queries if 2-col needed */
+            grid-template-columns: 1fr; 
+        }
+
+        .product-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Ensures image corners are rounded if image is direct child */
+        }
+
+        .product-image-container {
+            width: 100%;
+            height: 160px; /* Adjust as needed */
+            overflow: hidden;
+            background-color: #f0f0f0; /* Placeholder bg */
+        }
+        .product-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-info {
+            padding: 15px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-name {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+
+        .product-price {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 8px;
+        }
+        
+        .product-category-badge {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--primary-blue);
+            background-color: var(--light-blue-bg);
+            padding: 3px 8px;
+            border-radius: 12px;
+            display: inline-block; /* Fit content */
+            margin-bottom: 8px;
+            text-transform: capitalize;
+        }
+
+        .product-description {
+            font-size: 13px;
+            color: var(--text-medium);
+            line-height: 1.5;
+            margin-bottom: 15px;
+            flex-grow: 1; /* Allows description to take space before actions */
+            
+            display: -webkit-box;
+            -webkit-line-clamp: 3; /* Max 3 lines */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: auto; /* Pushes to bottom */
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background-color 0.2s ease;
+        }
+        .action-button .fas { font-size: 13px; }
+
+        .btn-edit {
+            background-color: var(--edit-color);
+            color: white;
+        }
+        .btn-edit:hover { background-color: var(--edit-hover); }
+
+        .btn-delete {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        .btn-delete:hover { background-color: var(--danger-hover); }
+        
+        /* No Items Message */
+        .no-items-container {
+            text-align: center;
+            padding: 40px 20px;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        .no-items-container .fas {
+            font-size: 40px;
+            color: var(--text-light);
+            margin-bottom: 15px;
+        }
+        .no-items-container p {
+            font-size: 16px;
+            color: var(--text-medium);
+            margin-bottom: 20px;
+        }
+        .btn-add-first-item {
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            transition: background-color 0.2s ease;
+        }
+        .btn-add-first-item:hover {
+            background-color: #003a8c;
+        }
+
+
+        /* Bottom Navigation Bar */
+        .nav-bar {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background-color: var(--card-bg);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            padding: 8px 0;
+            z-index: 1000;
+            border-top: 1px solid var(--border-color);
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 5px 8px;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        .nav-icon { font-size: 18px; margin-bottom: 3px; }
+        .nav-item.active { color: var(--primary-blue); }
+        .nav-item:hover:not(.active) { color: var(--text-medium); }
+        .add-button-container { position: relative; display: flex; justify-content: center; align-items: center; }
+        .add-button {
+            width: 48px; height: 48px; background-color: var(--primary-blue);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); margin-top: -20px;
+            font-size: 22px; color: white; cursor: pointer; border: 2px solid white; z-index: 1;
+        }
+        .add-button:hover { background-color: #003a8c; }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <div class="header-left-placeholder"></div> <!-- For balance if no back button -->
+            <h1 class="header-title">{{ food_stall_name|default:"Menu Management" }}</h1>
+            <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-logo">
+        </div>
+
+        <div class="main-content">
+            {% if messages %}
+            <div class="messages-section">
+                <ul class="messages">
+                    {% for message in messages %}
+                    <li class="{% if message.tags %}{{ message.tags }}{% endif %}">
+                        {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}<i class="fas fa-times-circle"></i>
+                        {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}<i class="fas fa-check-circle"></i>
+                        {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}<i class="fas fa-exclamation-triangle"></i>
+                        {% else %}<i class="fas fa-info-circle"></i>{% endif %}
+                        {{ message }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="category-filter-container">
+                <a href="{% url 'food_list' %}" class="category-button {% if selected_category == 'All' %}active{% endif %}" data-category="All">All</a>
+                {% for category_name in categories %}
+                    <a href="{% url 'food_list' %}?category={{ category_name|urlencode }}"
+                       class="category-button {% if selected_category == category_name %}active{% endif %}"
+                       data-category="{{ category_name }}">
+                        {{ category_name }}
+                    </a>
+                {% endfor %}
+        </div>
+        
+            <div class="item-count-header">
+                Showing {{ products.count }} Item{{ products.count|pluralize }}
+                {% if selected_category != 'All' %} in "{{ selected_category }}" {% endif %}
+        </div>
+
+            {% if products %}
+                <div class="product-grid">
+                    {% for product in products %}
+                    <div class="product-card" data-product-id="{{ product.pk }}">
+                        <div class="product-image-container">
+                            {% if product.image_url %}
+                                <img src="{{ product.image_url }}" alt="{{ product.product_name }}" class="product-image">
+                            {% else %}
+                                <img src="{% static 'img/placeholder_food_alt.png' %}" alt="Placeholder" class="product-image">
+                                {# Assuming you have a placeholder, or use an icon #}
+                            {% endif %}
+                        </div>
+                        <div class="product-info">
+                            <h2 class="product-name">{{ product.product_name }}</h2>
+                            <p class="product-price">₱{{ product.unit_price|floatformat:2|intcomma }}</p>
+                            {% if product.category %}
+                                <span class="product-category-badge">{{ product.category }}</span>
+                            {% endif %}
+                            {% if product.details %}
+                                <p class="product-description">{{ product.details }}</p>
+                            {% else %}
+                                <p class="product-description" style="color: var(--text-light); font-style: italic;">No description available.</p>
+                            {% endif %}
+                            <div class="product-actions">
+                                <a href="{% url 'edit_product' product.id %}" class="action-button btn-edit">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="{% url 'delete_product' product.id %}" class="action-button btn-delete">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="no-items-container">
+                    <i class="fas fa-utensils"></i>
+                    {% if selected_category != 'All' %}
+                        <p>No items found in the category "{{ selected_category }}".</p>
+                    {% else %}
+                        <p>You haven't added any food items yet.</p>
+                    {% endif %}
+                    <a href="{% url 'add-item' %}" class="btn-add-first-item">
+                        <i class="fas fa-plus"></i> Add Your First Item
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Bottom Navigation Bar -->
+        <div class="nav-bar">
+            <a href="{% url 'dashboard' %}" class="nav-item" id="homeNav">
+                <div class="nav-icon"><i class="fa-solid fa-house"></i></div>
+                <div>Home</div>
+            </a>
+            <a href="{% url 'orders' %}" class="nav-item" id="ordersNav">
+                <div class="nav-icon"><i class="fa-solid fa-table-list"></i></div>
+                <div>Orders</div>
+            </a>
+            <div class="add-button-container">
+                 <a href="{% url 'add-item' %}" class="add-button" id="addButton">
+                    <i class="fa-solid fa-plus"></i>
+                </a>
+            </div>
+            <a href="{% url 'food_list' %}" class="nav-item active" id="foodlistNav">
+                <div class="nav-icon"><i class="fa-solid fa-utensils"></i></div>
+                <div>Menu</div>
+            </a>
+            <a href="{% url 'overview' %}" class="nav-item" id="overviewNav">
+                <div class="nav-icon"><i class="fa-solid fa-chart-simple"></i></div>
+                <div>Sales</div>
+            </a>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Optional: Client-side active state for category tabs if needed for SPA-like feel
+        // without page reload, though current setup reloads with query params.
+        const categoryButtons = document.querySelectorAll('.category-button');
+        const currentUrlParams = new URLSearchParams(window.location.search);
+        const currentCategory = currentUrlParams.get('category');
+
+        categoryButtons.forEach(button => {
+            if ((!currentCategory && button.dataset.category === 'All') || button.dataset.category === currentCategory) {
+                // button.classList.add('active'); // Django template already handles this
+            }
+            button.addEventListener('click', function(event) {
+                // Optional: if you wanted to handle filtering via JS instead of page reload
+                // event.preventDefault();
+                // const selectedCat = this.dataset.category;
+                // window.location.href = `{% url 'food_list' %}?category=${encodeURIComponent(selectedCat)}`;
+            });
+        });
+
+        // Active state for bottom nav
+        const currentPath = window.location.pathname;
+        const navItems = document.querySelectorAll('.nav-bar .nav-item');
+        let foodListIsActive = false;
+        navItems.forEach(item => {
+            const itemPath = item.getAttribute('href');
+            if (itemPath && currentPath.startsWith(itemPath)) { // Use startsWith for more flexible matching
+                 if (item.id === 'foodlistNav'){
+                    foodListIsActive = true;
+                 } else {
+                    item.classList.add('active');
+                 }
+            } else {
+                item.classList.remove('active');
+            }
+        });
+        // Ensure "Menu" is active if on food_list page, overriding broader matches
+        if (foodListIsActive || currentPath.includes("{% url 'food_list' %}")) {
+             navItems.forEach(opt => opt.classList.remove('active'));
+             document.getElementById('foodlistNav')?.classList.add('active');
+        }
+
+
+        // Message dismissal (optional)
+        const messages = document.querySelectorAll('.messages li');
+        messages.forEach(message => {
+            message.addEventListener('click', function() {
+                this.style.opacity = '0';
+                setTimeout(() => this.remove(), 300);
+            });
+        });
+        });
+    </script>
+</body>
+</html>

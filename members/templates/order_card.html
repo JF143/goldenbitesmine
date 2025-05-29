@@ -1,0 +1,50 @@
+{% load humanize %}
+<div class="order-item" data-order-id="{{ order.id }}">
+    <div class="order-header">
+        <div class="order-id">Order #{{ order.queue_id|default:order.id }}</div>
+        <div class="order-status 
+            {% if order.status == 'Pending' %}status-pending
+            {% elif order.status == 'Preparing' %}status-preparing
+            {% elif order.status == 'Ready' %}status-ready
+            {% elif order.status == 'Completed' %}status-completed
+            {% elif order.status == 'Cancelled' %}status-cancelled
+            {% endif %}">
+            {{ order.status }}
+        </div>
+    </div>
+    <div class="order-details">
+        <div class="order-time">Time: {{ order.order_time|date:"P, M d" }}</div>
+        <div class="order-type">Type: {{ order.get_order_type_display }}</div>
+        {% if order.customer %}
+        <div class="order-customer">Customer: {{ order.customer.first_name|default:order.customer.username }}</div>
+        {% endif %}
+        {% if order.order_summary %}
+            <div class="order-summary">Note: {{ order.order_summary|truncatewords:10 }}</div>
+        {% endif %}
+        <div class="order-total">Total: ₱{{ order.total_price|intcomma }}</div>
+        <p><strong>Items:</strong></p>
+        <ul>
+            {% for item in order.orderitem_set.all %}
+                <li>{{ item.product.product_name }} (x{{ item.quantity }})</li>
+            {% empty %}
+                <li>No items listed.</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="order-actions">
+        {% if card_type == 'pending' %}
+            <button class="btn btn-primary update-status-btn" data-order-id="{{ order.id }}" data-new-status="Preparing" data-original-text="Accept">Accept</button>
+            <button class="btn btn-danger update-status-btn" data-order-id="{{ order.id }}" data-new-status="Cancelled" data-original-text="Cancel">Cancel</button>
+        {% elif card_type == 'preparing' %}
+            <button class="btn btn-primary update-status-btn" data-order-id="{{ order.id }}" data-new-status="Ready" data-original-text="Mark as Ready">Mark as Ready</button>
+        {% elif card_type == 'ready' %}
+            <button class="btn btn-primary update-status-btn" data-order-id="{{ order.id }}" data-new-status="Completed" data-original-text="Mark as Completed">Mark as Completed</button>
+        {% elif card_type == 'completed' %}
+            <!-- No actions for completed by default, or maybe an "Archive" button -->
+            <span style="font-size: 14px; color: #666;">Order completed.</span>
+        {% elif card_type == 'cancelled' %}
+             <span style="font-size: 14px; color: #666;">Order cancelled.</span>
+        {% endif %}
+        <button class="btn btn-outline view-details-btn" data-order-id="{{ order.id }}">View Details</button>
+    </div>
+</div> 

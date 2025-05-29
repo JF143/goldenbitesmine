@@ -1,0 +1,20 @@
+<div style="padding: 1.5em;">
+    <h2 style="margin-bottom: 1em;">Order #{{ order.id }}</h2>
+    <div><strong>Customer:</strong> {{ order.customer.get_full_name|default:order.customer.username }}</div>
+    <div><strong>Order Time:</strong> {{ order.order_time|date:"Y-m-d H:i" }}</div>
+    <div><strong>Order Type:</strong> {{ order.get_order_type_display }}</div>
+    <div><strong>Summary:</strong> {{ order.order_summary|default:"N/A" }}</div>
+    <div><strong>Queue #:</strong> {{ order.queue_id|default:"N/A" }}</div>
+    <div><strong>Payment:</strong> {% if order.payment %}{{ order.payment.payment_method }} (Status: {{ order.payment.payment_status }}, ID: {{ order.payment.id }}){% else %}N/A{% endif %}</div>
+    <div><strong>Food Stall:</strong> {% if order.food_stall %}{{ order.food_stall.stall_name }}{% else %}N/A{% endif %}</div>
+    <div><strong>Status:</strong> {{ order.status }}</div>
+    <hr style="margin:1em 0;">
+    <h3>Items</h3>
+    <ul style="list-style: none; padding-left:0;">
+    {% for item in order.orderitem_set.all %}
+        <li style="margin-bottom: 0.5em;">{{ item.product.product_name }} &times; {{ item.quantity }} — ₱{{ item.price|floatformat:2 }}</li>
+    {% empty %}
+        <li>No items found in this order.</li>
+    {% endfor %}
+    </ul>
+</div> 

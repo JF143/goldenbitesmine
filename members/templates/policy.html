@@ -1,0 +1,278 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Golden Bites - Terms and Privacy</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Reset and base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif; /* Ensure Inter font is used */
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      padding: 30px;
+      max-width: 900px;
+      margin: auto;
+      background-color: #f9f9f9;
+      color: #000000;
+      line-height: 1.6;
+    }
+
+    .container {
+      position: relative;
+      max-width: 430px;
+      margin: 0 auto;
+    }
+
+    .policy-container {
+      max-width: 430px;
+      margin: 0 auto;
+      background-color: white;
+      min-height: 100vh;
+      position: relative;
+      padding: 1rem;
+      border-radius: 1rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    h1 {
+      color: #4a7bca;
+      font-size: 25px;
+      margin-top: 5px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    h2 {
+      color: #0A2463;
+      font-size: 20px;
+      margin-top: 30px;
+    }
+
+    ul, p {
+      padding-left: 30px;
+      margin-bottom: 10px;
+    }
+
+    ul li {
+      margin-bottom: 5px;
+    }
+
+    hr {
+      margin: 30px 0;
+      border: none;
+      border-top: 1px solid #eee;
+    }
+
+    .back-icon {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: #4a7bca;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.2s;
+    }
+
+    .btn-primary {
+      background-color: #4a7bca;
+    }
+
+    .btn-primary:hover {
+      background-color: #3a6cb8;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      body {
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 15px;
+      }
+      
+      h1 {
+        font-size: 22px;
+      }
+      
+      h2 {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+    <div class="container"> 
+
+    <div class="back-icon" id="back-btn">&#8592;</div>
+    
+  <div class="policy-container">
+  <h1>Golden Bites – Terms and Conditions</h1>
+
+  <h2>1. Acceptance of Terms</h2>
+  <p>By using the Golden Bites application, you agree to be bound by these Terms and Conditions. If you do not agree, please do not use our services.</p>
+
+  <h2>2. Eligibility</h2>
+  <p>Golden Bites is only available to authorized students, faculty, and staff of Ateneo de Naga University.</p>
+
+  <h2>3. User Responsibilities</h2>
+  <ul>
+    <li>You are responsible for keeping your account secure.</li>
+    <li>You agree not to use false identity or share credentials.</li>
+  </ul>
+
+  <h2>4. Payments and Orders</h2>
+  <ul>
+    <li>All orders are processed by the Golden Bites system with a ₱15 transaction fee.</li>
+    <li>Order cancellations are subject to seller approval.</li>
+  </ul>
+
+  <h2>5. Availability</h2>
+  <p>Golden Bites operates from 8:00 AM to 5:00 PM on weekdays, and half-day on Saturdays. Services are unavailable on Sundays and holidays.</p>
+
+  <h2>6. Modifications</h2>
+  <p>Golden Bites reserves the right to update these terms at any time.</p>
+
+  <hr />
+
+  <h1>Privacy Policy</h1>
+
+  <h2>1. Data Collection</h2>
+  <p>We collect the following data during registration and order processing:</p>
+  <ul>
+    <li>Name and Shop Name</li>
+    <li>Email and Phone Number</li>
+    <li>Password (encrypted)</li>
+    <li>Transaction and order history</li>
+  </ul>
+
+  <h2>2. How We Use Your Data</h2>
+  <ul>
+    <li>To process orders and facilitate payments</li>
+    <li>To communicate updates or promotions</li>
+    <li>To analyze usage and improve our system</li>
+  </ul>
+
+  <h2>3. Data Sharing</h2>
+  <p>We do not sell or share your personal information with third parties, except as required by law or with your consent.</p>
+
+  <h2>4. Security</h2>
+  <p>Your data is encrypted and securely stored. Access is restricted to authorized administrators.</p>
+
+  <h2>5. Your Rights</h2>
+  <p>You have the right to view, update, or delete your information by contacting support.</p>
+
+  <p style="margin-top: 40px; text-align: left;">If you have questions, contact us at: <strong>support_goldenbites@gmail.com</strong></p>
+  
+<div style="text-align: center; margin-top: 50px;">
+  <a href="#" id="acceptBtn" class="btn btn-primary">I Accept</a>
+</div>
+  </div>
+    
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get the back button and accept button
+      const backBtn = document.querySelector('.back-icon');
+      const acceptBtn = document.getElementById('acceptBtn');
+      
+      // Add event listener to back button
+      if (backBtn) {
+        backBtn.addEventListener('click', function() {
+          // Check if there's a previous page in history
+          if (document.referrer) {
+            window.history.back();
+          } else {
+            // If no referrer, go to register page
+            window.location.href = "{% url 'register' %}"; // Use Django URL template tag
+          }
+        });
+      }
+      
+      // Add event listener to accept button
+      if (acceptBtn) {
+        acceptBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // Store acceptance in localStorage
+          try {
+            localStorage.setItem('termsAccepted', 'true');
+            localStorage.setItem('termsAcceptedDate', new Date().toISOString());
+          } catch (error) {
+            console.error('Error saving to localStorage:', error);
+          }
+          
+          // Check if there's a previous page in history
+          if (document.referrer && document.referrer.includes('register')) {
+            window.history.back();
+          } else {
+            // If no referrer or not from register page, go to register page
+            window.location.href = "{% url 'register' %}"; // Use Django URL template tag
+          }
+        });
+      }
+      
+      // Add smooth scrolling for better user experience
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault();
+          
+          document.querySelector(this.getAttribute('href')).scrollIntoView({
+            behavior: 'smooth'
+          });
+        });
+      });
+      
+      // Track reading progress
+      let readingProgress = 0;
+      const policyContainer = document.querySelector('.policy-container');
+      
+      if (policyContainer) {
+        window.addEventListener('scroll', function() {
+          const containerHeight = policyContainer.scrollHeight;
+          const scrollPosition = window.scrollY + window.innerHeight;
+          const scrollPercentage = (scrollPosition / containerHeight) * 100;
+          
+          // Update reading progress
+          if (scrollPercentage > readingProgress) {
+            readingProgress = scrollPercentage;
+            
+            // If user has read at least 70% of the document, consider it as read
+            if (readingProgress >= 70) {
+              try {
+                localStorage.setItem('termsRead', 'true');
+              } catch (error) {
+                console.error('Error saving to localStorage:', error);
+              }
+            }
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,745 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golden Bites - Overview</title>
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: #333;
+        }
+
+        .container {
+            max-width: 430px;
+            margin: 0 auto;
+            background-color: white;
+            min-height: 100vh;
+            position: relative;
+            padding: 1rem;
+            border-radius: 1rem;
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+            margin-bottom: 20px;
+        }
+
+        .back-icon {
+            font-size: 24px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .centered-shop-name {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .logo {
+            width: 35px;
+            height: 35px;
+        }
+
+        /* Overview Header */
+        .overview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            margin-bottom: 20px;
+        }
+
+        .overview-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Time Filter */
+        .time-filter {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            margin: 0 20px 20px;
+            padding-bottom: 5px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .time-filter::-webkit-scrollbar {
+            display: none;
+        }
+
+        .time-option {
+             padding: 8px 13px;
+            font-size: 14px;
+            color: #666;
+            background-color: #f5f5f5;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .time-option.active {
+            background-color: #0047ab;
+            color: white;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 0 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background-color: #f8f8f8;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #0047ab;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* Revenue Section */
+        .revenue-section {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 0 20px 70px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .revenue-details {
+            margin-bottom: 20px;
+        }
+
+        .revenue-amount {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .revenue-period {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .graph {
+            width: 100%;
+            height: 120px;
+            background-image: linear-gradient(to right, transparent 0%, transparent 100%),
+                linear-gradient(to right, #e6f0ff 0%, #e6f0ff 100%);
+            background-size: 100% 1px, 100% 100%;
+            background-position: center, center;
+            background-repeat: no-repeat;
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .graph::before {
+            content: "";
+            position: absolute;
+            top: 70%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #ddd;
+        }
+
+        .graph-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 100'%3E%3Cpath d='M0,50 C50,40 100,60 150,50 C200,40 250,60 300,45 C350,30 400,50 450,40 C480,35 500,40 500,40' stroke='%230047AB' stroke-width='3' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+        }
+
+        .graph-labels {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+        }
+
+        .graph-label {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: #0047ab;
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #0047ab;
+            color: #0047ab;
+        }
+
+        /* Navigation Bar */
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fff;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 425px;
+            margin: 0 auto;
+            padding: 10px 10px;
+            z-index: 100;
+            border-radius: 1rem;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            color: #888;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 2px;
+        }
+
+        .nav-item.active, .nav-item:hover{
+            color: #0047ab;
+        }
+
+        .add-button {
+            width: 50px;
+            height: 50px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-top: -25px;
+            font-size: 24px;
+            color: #0a2463;
+            cursor: pointer;
+        }
+
+        /* Custom Alert Modal */
+        .custom-alert-modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1001; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .custom-alert-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 300px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+        }
+
+        .custom-alert-content h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .custom-alert-content p {
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .custom-alert-content button {
+            background-color: #4a7bca;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+
+        .custom-alert-content button:hover {
+            background-color: #3a6cb8;
+        }
+
+        /* Custom Confirm Modal specific styles */
+        .confirm-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .confirm-buttons button {
+            flex: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .overview-title {
+                font-size: 20px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            
+            .stat-card:last-child {
+                grid-column: span 2;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div class="header">
+             <div class="back-icon" id="back-icon">&#8592;</div>
+
+            <h1 id="shopNameHeading" class="centered-shop-name">Your Shop</h1>
+            
+            <div class="logo">
+                 <img src="{% static 'img/logo.png' %}" class="logo" onerror="this.src='https://placehold.co/35x35/E0E0E0/333333?text=Logo'">
+            </div>
+        </div>
+        
+        <div class="overview-header">
+            <div class="overview-title">Sales Report</div>
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="exportBtn">
+                    Export Data
+                </button>
+            </div>
+        </div>
+        
+        <div class="time-filter">
+            <div class="time-option" data-period="12months">12 months</div>
+            <div class="time-option" data-period="30days">30 days</div>
+            <div class="time-option" data-period="7days">7 days</div>
+            <div class="time-option active" data-period="24hours">24 hours</div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">&#128176;</div>
+                <div class="stat-label">Total Sales</div>
+                <div class="stat-value" id="totalSales">₱ 1,500.00</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">&#128178;</div>
+                <div class="stat-label">Total Revenue</div>
+                <div class="stat-value" id="totalRevenue">₱ 1,350.00</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">&#128230;</div>
+                <div class="stat-label">Total Orders</div>
+                <div class="stat-value" id="totalOrders">15</div>
+            </div>
+        </div>
+        
+        <div class="revenue-section">
+            <div class="section-header">
+                <div class="section-title">Revenue</div>
+            </div>
+            
+            <div class="revenue-details">
+                <div class="revenue-amount" id="revenueAmount">₱ 1,350.00</div>
+                <div class="revenue-period" id="revenuePeriod">Today (May 22, 2025)</div>
+            </div>
+            
+        </div>
+        
+       
+        <div class="nav-bar">
+        <div class="nav-item" id="homeNav">
+            <div class="nav-icon"><i class="fa-solid fa-house"></i></div>
+            <div>Home</div>
+        </div>
+        <div class="nav-item" id="ordersNav">
+            <div class="nav-icon"><i class="fa-solid fa-table-list"></i></div>
+            <div>Orders</div>
+        </div>
+        <div class="add-button" id="addButton">
+            +
+        </div>
+        <div class="nav-item" id="ordersummaryNav">
+            <div class="nav-icon"><i class="fa-solid fa-file"></i></div>
+            <div>Summary</div>
+        </div>
+        <div class="nav-item active" id="overviewNav">
+            <div class="nav-icon"><i class="fa-solid fa-chart-simple"></i></div>
+            <div>Sales</div>
+        </div>
+        </div>
+
+    </div>
+    
+    <div id="customAlertModal" class="custom-alert-modal">
+        <div class="custom-alert-content">
+            <h3 id="customAlertTitle"></h3>
+            <p id="customAlertMessage"></p>
+            <button id="customAlertOkButton">OK</button>
+        </div>
+    </div>
+
+    <div id="customConfirmModal" class="custom-alert-modal">
+        <div class="custom-alert-content">
+            <h3 id="customConfirmTitle"></h3>
+            <p id="customConfirmMessage"></p>
+            <div class="confirm-buttons">
+                <button id="customConfirmYesButton">Yes</button>
+                <button id="customConfirmNoButton">No</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to show custom alert modal
+        function showAlert(title, message) {
+            const modal = document.getElementById('customAlertModal');
+            const titleElement = document.getElementById('customAlertTitle');
+            const messageElement = document.getElementById('customAlertMessage');
+            const okButton = document.getElementById('customAlertOkButton');
+
+            titleElement.textContent = title;
+            messageElement.textContent = message;
+            modal.style.display = 'flex'; // Show the modal
+
+            okButton.onclick = function() {
+                modal.style.display = 'none'; // Hide the modal when OK is clicked
+            };
+        }
+
+        // Function to show custom confirmation modal (not used in this page, but included for consistency)
+        function showConfirm(title, message) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('customConfirmModal');
+                const titleElement = document.getElementById('customConfirmTitle');
+                const messageElement = document.getElementById('customConfirmMessage');
+                const yesButton = document.getElementById('customConfirmYesButton');
+                const noButton = document.getElementById('customConfirmNoButton');
+
+                titleElement.textContent = title;
+                messageElement.textContent = message;
+                modal.style.display = 'flex';
+
+                const cleanup = () => {
+                    yesButton.onclick = null;
+                    noButton.onclick = null;
+                    modal.style.display = 'none';
+                };
+
+                yesButton.onclick = () => {
+                    cleanup();
+                    resolve(true);
+                };
+
+                noButton.onclick = () => {
+                    cleanup();
+                    resolve(false);
+                };
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Constants for localStorage keys
+            const REVENUE_DATA_KEY = 'goldenBites_revenueData'; // Shared with dashboard
+            const SHOP_NAME_KEY = 'goldenBites_shopName';
+            
+            // Set shop name
+            const shopNameHeading = document.getElementById('shopNameHeading');
+            if (shopNameHeading) {
+                const shopName = localStorage.getItem(SHOP_NAME_KEY) || "Golden Bites Shop";
+                shopNameHeading.textContent = shopName;
+            }
+            
+            // Load sales data for default time period (24 hours)
+            loadSalesData('24hours');
+
+            // Add event listeners to time filter options
+            const timeOptions = document.querySelectorAll('.time-option');
+            timeOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove active class from all options
+                    timeOptions.forEach(opt => opt.classList.remove('active'));
+                    // Add active class to clicked option
+                    this.classList.add('active');
+                    // Load sales data for selected time period
+                    const period = this.getAttribute('data-period');
+                    loadSalesData(period);
+                });
+            });
+            
+            // Add event listener to export button
+            const exportBtn = document.getElementById('exportBtn');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', function() {
+                    showAlert('Export Data', 'Export functionality would be implemented here.');
+                });
+            }
+            
+           // Add event listeners to navigation items and highlight active item
+            const homeNav = document.getElementById('homeNav');
+            const ordersNav = document.getElementById('ordersNav');
+            const ordersummaryNav = document.getElementById('ordersummaryNav');
+            const overviewNav = document.getElementById('overviewNav');
+            const addButton = document.getElementById('addButton');
+
+            // Define a mapping of nav elements to their URLs
+            const navMap = {
+                homeNav: "{% url 'dashboard' %}",
+                ordersNav: "{% url 'orders' %}",
+                addButton: "{% url 'add-item' %}",
+                overviewNav: "{% url 'order_summary' %}",
+                ordersummaryNav: "{% url 'overview' %}"
+            };
+
+            // Get current path
+            const currentPath = window.location.pathname;
+
+            // Loop through the map and set click + active logic
+            Object.entries(navMap).forEach(([id, url]) => {
+                const navItem = document.getElementById(id);
+                if (navItem) {
+                    // Set click handler
+                    navItem.addEventListener('click', function () {
+                        window.location.href = url;
+                    });
+
+                    // Set active class based on URL match
+                    const tempLink = document.createElement('a');
+                    tempLink.href = url;
+                    if (tempLink.pathname === currentPath) {
+                        navItem.classList.add('active');
+                    } else {
+                        navItem.classList.remove('active');
+                    }
+                }
+            });
+
+            // Handle Add button separately (no active state, unless you want it)
+            if (addButton) {
+                addButton.addEventListener('click', function () {
+                    window.location.href = "{% url 'add-item' %}";
+                });
+            }
+
+            
+            // Add event listener to back icon
+            const backIcon = document.getElementById('back-icon');
+            if (backIcon) {
+                backIcon.addEventListener('click', function() {
+                    window.history.back();
+                });
+            }
+        });
+        
+        // Function to load sales data
+        function loadSalesData(period) {
+            // In a real app, this would fetch data from a server
+            // For demo purposes, we'll use mock data
+            
+            let salesData;
+            
+            switch (period) {
+                case '12months':
+                    salesData = {
+                        totalSales: 125000,
+                        totalRevenue: 112500,
+                        totalOrders: 1250,
+                        revenuePeriod: 'May 2024 - May 2025'
+                    };
+                    break;
+                case '30days':
+                    salesData = {
+                        totalSales: 42000,
+                        totalRevenue: 37800,
+                        totalOrders: 420,
+                        revenuePeriod: 'Apr 2025 - May 2025'
+                    };
+                    break;
+                case '7days':
+                    salesData = {
+                        totalSales: 9800,
+                        totalRevenue: 8820,
+                        totalOrders: 98,
+                        revenuePeriod: 'May 15, 2025 - May 22, 2025'
+                    };
+                    break;
+                case '24hours':
+                default:
+                    salesData = {
+                        totalSales: 1500,
+                        totalRevenue: 1350,
+                        totalOrders: 15,
+                        revenuePeriod: 'Today (May 22, 2025)'
+                    };
+                    break;
+            }
+            
+            // Save revenue data to localStorage for sharing with dashboard
+            const revenueData = {
+                totalRevenue: salesData.totalRevenue,
+                period: salesData.revenuePeriod
+            };
+            localStorage.setItem('goldenBites_revenueData', JSON.stringify(revenueData));
+            
+            // Update UI with sales data
+            updateSalesUI(salesData);
+        }
+        
+        // Function to update UI with sales data
+        function updateSalesUI(data) {
+            // Format currency
+            const formatCurrency = (amount) => {
+                return new Intl.NumberFormat('en-PH', {
+                    style: 'currency',
+                    currency: 'PHP',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(amount).replace('PHP', '₱');
+            };
+            
+            // Update total sales
+            const totalSalesElement = document.getElementById('totalSales');
+            if (totalSalesElement) {
+                totalSalesElement.textContent = formatCurrency(data.totalSales);
+            }
+            
+            // Update total revenue
+            const totalRevenueElement = document.getElementById('totalRevenue');
+            if (totalRevenueElement) {
+                totalRevenueElement.textContent = formatCurrency(data.totalRevenue);
+            }
+            
+            // Update total orders
+            const totalOrdersElement = document.getElementById('totalOrders');
+            if (totalOrdersElement) {
+                totalOrdersElement.textContent = data.totalOrders;
+            }
+            
+            // Update revenue amount
+            const revenueAmountElement = document.getElementById('revenueAmount');
+            if (revenueAmountElement) {
+                revenueAmountElement.textContent = formatCurrency(data.totalRevenue);
+            }
+            
+            // Update revenue period
+            const revenuePeriodElement = document.getElementById('revenuePeriod');
+            if (revenuePeriodElement) {
+                revenuePeriodElement.textContent = data.revenuePeriod;
+            }
+        }
+    </script>
+</body>
+</html>

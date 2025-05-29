@@ -1,0 +1,291 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <title>{{ page_title|default:"Add Item" }} - Golden Bites</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        .page-container {
+            max-width: 500px;
+            margin: 0 auto; /* Changed margin for sticky header */
+            padding: 0; /* Remove padding from container, apply to content below header */
+            background-color: #ffffff;
+            min-height: 100vh; /* Ensure it takes full height */
+        }
+
+        .top-nav-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background-color: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .top-nav-header .back-icon {
+            font-size: 20px;
+            color: #333;
+            text-decoration: none;
+        }
+
+        .top-nav-header .shop-name-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .top-nav-header .shop-logo {
+            height: 30px;
+            width: auto;
+        }
+
+        .content-area { /* New class for content below header */
+            padding: 20px;
+        }
+
+        .form-header-info { /* Replaces the old .header class for title/subtitle */
+            margin-bottom: 25px;
+            /* padding-bottom: 15px; */ /* Removed border from here */
+            /* border-bottom: 1px solid #e0e0e0; */
+        }
+
+        .form-header-info .title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1c1e21;
+            margin: 0 0 5px 0;
+        }
+
+        .form-header-info .subtitle {
+            font-size: 15px;
+            color: #606770;
+            margin: 0;
+        }
+
+        /* Form styles from sign-in.html, adapted */
+        form p, .form-group-custom { /* .form-group-custom for non-form.as_p elements if any */
+            margin-bottom: 20px;
+        }
+
+        form label, .form-label-custom {
+            display: block;
+            font-weight: 500;
+            font-size: 14px;
+            color: #333; /* Darker label from screenshot */
+            margin-bottom: 8px;
+        }
+
+        form input[type="text"],
+        form input[type="number"],
+        form select,
+        form textarea,
+        form input[type="file"] {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ccd0d5;
+            border-radius: 6px;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: #fff; /* Ensure inputs are white */
+        }
+
+        form input[type="text"]:focus,
+        form input[type="number"]:focus,
+        form select:focus,
+        form textarea:focus,
+        form input[type="file"]:focus {
+            outline: none;
+            border-color: #1877f2;
+            box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2);
+        }
+        
+        form textarea {
+            min-height: 80px; /* Default height for textareas */
+            resize: vertical;
+        }
+
+        .image-upload-container {
+            margin-bottom: 20px;
+        }
+
+        .image-preview-box {
+            width: 100px;
+            height: 100px;
+            border: 2px dashed #ccd0d5;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background-color: #f8f9fa;
+            margin-bottom: 10px; /* Space below preview */
+            overflow: hidden; /* To contain the image */
+        }
+        .image-preview-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+        }
+        .image-preview-box .camera-icon {
+            font-size: 30px;
+            color: #adb5bd;
+        }
+
+        /* Help text and error lists (can reuse from sign-in if globally styled or copy here) */
+        .helptext { font-size: 0.85em; color: #606770; margin-left: 5px; margin-top: 3px; display: block; }
+        .errorlist { list-style-type: none; padding: 0; color: #fa383e; font-size: 0.85em; margin-top: 3px; }
+        .errorlist li { margin-bottom: 3px; }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background-color: #1877f2; 
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px; /* Space above button */
+        }
+        .btn-primary:hover { background-color: #166fe5; }
+
+        .messages { list-style: none; padding: 0; margin-bottom: 20px; }
+        .messages li { padding: 12px 15px; margin-bottom: 10px; border-radius: 6px; font-size: 15px; text-align: center; }
+        .messages li.success { background-color: #e6ffed; color: #006421; border: 1px solid #a3e2b4; }
+        .messages li.error { background-color: #ffebe6; color: #c72a00; border: 1px solid #ffc4b3; }
+
+        /* Font Awesome for camera icon (if you decide to use it) */
+        /* @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css'); */
+
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="top-nav-header">
+            <a href="{% url 'food_list' %}" class="back-icon"><i class="fas fa-arrow-left"></i></a>
+            <h1 class="shop-name-title">{{ food_stall_name|default:request.user.shop_name|default:"Your Shop" }}</h1>
+            <img src="{% static 'img/logo.png' %}" alt="Logo" class="shop-logo">
+        </div>
+
+        <div class="content-area">
+            <div class="form-header-info">
+                <h1 class="title">{{ page_title|default:"Add Item" }}</h1>
+                <p class="subtitle">Add a new food item to your menu</p>
+            </div>
+
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li class="{% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <form method="POST" action="{% url 'add-item' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="image-upload-container">
+                    <label for="{{ form.product_image.id_for_label }}" class="form-label-custom">{{ form.product_image.label }}</label>
+                    <div class="image-preview-box" id="imagePreviewBox">
+                        <i class="fas fa-camera camera-icon" id="cameraIcon"></i>
+                        <img src="" alt="Image Preview" id="imagePreview" style="display: none;"/>
+                    </div>
+                    {{ form.product_image.errors }}
+                    {{ form.product_image }}
+                    {% if form.product_image.help_text %}<span class="helptext">{{ form.product_image.help_text|safe }}</span>{% endif %}
+                </div>
+
+                {{ form.product_name.errors }}
+                <p>
+                    <label for="{{ form.product_name.id_for_label }}">{{ form.product_name.label }}</label>
+                    {{ form.product_name }}
+                    {% if form.product_name.help_text %}<span class="helptext">{{ form.product_name.help_text|safe }}</span>{% endif %}
+                </p>
+
+                {{ form.unit_price.errors }}
+                <p>
+                    <label for="{{ form.unit_price.id_for_label }}">{{ form.unit_price.label }}</label>
+                    {{ form.unit_price }}
+                    {% if form.unit_price.help_text %}<span class="helptext">{{ form.unit_price.help_text|safe }}</span>{% endif %}
+                </p>
+
+                {{ form.category.errors }}
+                <p>
+                    <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
+                    {{ form.category }}
+                    {% if form.category.help_text %}<span class="helptext">{{ form.category.help_text|safe }}</span>{% endif %}
+                </p>
+
+                {{ form.ingredients.errors }}
+                <p>
+                    <label for="{{ form.ingredients.id_for_label }}">{{ form.ingredients.label }}</label>
+                    {{ form.ingredients }}
+                    {% if form.ingredients.help_text %}<span class="helptext">{{ form.ingredients.help_text|safe }}</span>{% endif %}
+                </p>
+
+                {{ form.details.errors }}
+                <p>
+                    <label for="{{ form.details.id_for_label }}">{{ form.details.label }}</label>
+                    {{ form.details }}
+                    {% if form.details.help_text %}<span class="helptext">{{ form.details.help_text|safe }}</span>{% endif %}
+                </p>
+                
+                <button type="submit" class="btn-primary">Add Item to Menu</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const imageUploadInput = document.getElementById("{{ form.product_image.id_for_label }}");
+            const imagePreviewBox = document.getElementById('imagePreviewBox');
+            const imagePreview = document.getElementById('imagePreview');
+            const cameraIcon = document.getElementById('cameraIcon');
+
+            if (imageUploadInput && imagePreviewBox && imagePreview && cameraIcon) {
+                imagePreviewBox.addEventListener('click', function() {
+                    imageUploadInput.click(); // Trigger file input click
+                });
+
+                imageUploadInput.addEventListener('change', function(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            imagePreview.src = e.target.result;
+                            imagePreview.style.display = 'block';
+                            cameraIcon.style.display = 'none';
+                        }
+                        reader.readAsDataURL(file);
+                    } else {
+                        imagePreview.src = '';
+                        imagePreview.style.display = 'none';
+                        cameraIcon.style.display = 'block';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

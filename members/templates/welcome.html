@@ -1,0 +1,164 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golden Bites - Welcome</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: #333;
+        }
+
+        /* Container */
+        .container {
+            max-width: 430px;
+            margin: 0 auto;
+            background-color: white;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Welcome Container */
+        .welcome-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 60px 30px 40px;
+            background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+        }
+
+        /* Logo Container */
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            margin-bottom: 40px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .logo-welcome {
+            width: 180px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        /* Welcome Buttons */
+        .welcome-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            animation: fadeIn 1s ease-out 0.3s forwards;
+            opacity: 0;
+        }
+
+        /* Button */
+        .btn {
+            display: block;
+            width: 100%;
+            height: 50px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none; /* To remove underline from the link */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-primary {
+            background-color: #4a7bca;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #3a6cb8;
+        }
+
+        /* Login Link */
+        .login-link {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #4a7bca;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 10px;
+        }
+
+        .login-link:hover {
+            text-decoration: underline;
+        }
+
+        .login-icon {
+            margin-left: 5px;
+            font-size: 12px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .welcome-container {
+                padding: 40px 20px 30px;
+            }
+
+            .logo-welcome {
+                width: 150px;
+            }
+
+            .btn {
+                height: 46px;
+                font-size: 15px;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container welcome-container">
+        <div class="logo-container">
+            <img src="{% static 'img/logo.png' %}" alt="Golden Bites Logo" class="logo-welcome">
+        </div>
+
+        <div class="welcome-buttons">
+            <a href="{% url 'landing' %}" class="login-link">
+                <button class="btn btn-primary">Let's get started</button>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Remove all mock data and localStorage logic for orders, food items, reviews, etc.
+        // Only keep code that displays real data from the backend
+        // ... existing code ...
+    </script>
+</body>
+</html>

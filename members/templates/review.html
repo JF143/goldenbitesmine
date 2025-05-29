@@ -1,0 +1,789 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Reviews - Golden Bites</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: #333;
+        }
+
+        .container {
+            max-width: 430px;
+            margin: 0 auto;
+            background-color: white;
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 70px; /* Space for nav bar */
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+            margin-bottom: 20px;
+        }
+
+        .back-icon {
+            font-size: 24px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .centered-shop-name {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .logo {
+            width: 35px;
+            height: 35px;
+        }
+
+        /* Reviews Header */
+        .reviews-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            margin-bottom: 20px;
+        }
+
+        .reviews-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .reviews-count {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .filter-dropdown {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        /* Food Items (Reviews List) */
+        .food-items {
+            padding: 0 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Review Card */
+        .review-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .reviewer-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .reviewer-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .reviewer-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .review-date {
+            font-size: 12px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .review-rating {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .stars-container {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 2px;
+        }
+
+        .star {
+            color: #ffc107;
+            font-size: 16px;
+        }
+
+        .star.empty {
+            color: #e0e0e0;
+        }
+
+        .star.half {
+            position: relative;
+            color: #e0e0e0;
+        }
+
+        .star.half:before {
+            content: "★";
+            position: absolute;
+            color: #ffc107;
+            width: 50%;
+            overflow: hidden;
+        }
+
+        .rating-label {
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* Review Content */
+        .review-content {
+            padding: 15px;
+        }
+
+        .review-section {
+            margin-bottom: 15px;
+        }
+
+        .review-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .review-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .review-text {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        .review-photos {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .review-photos::-webkit-scrollbar {
+            display: none;
+        }
+
+        .review-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        /* Navigation Bar */
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fff;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            padding: 10px 10px;
+            z-index: 100;
+            border-radius: 1rem 1rem 0 0;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            color: #888;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 2px;
+        }
+
+        .nav-item.active, .nav-item:hover{
+            color: #0047ab;
+        }
+
+        .add-button {
+            width: 50px;
+            height: 50px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-top: -25px;
+            font-size: 24px;
+            color: #0a2463;
+            cursor: pointer;
+        }
+        
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .user-info-section {
+            margin-bottom: 30px;
+        }
+
+        .user-info-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .user-info-item {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .user-info-item label {
+            width: 100px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .user-info-item span {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .logout-container {
+            text-align: center;
+        }
+
+        .btn-danger {
+            background-color: #f44336;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Custom Alert Modal */
+        .custom-alert-modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1001; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .custom-alert-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 300px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+        }
+
+        .custom-alert-content h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .custom-alert-content p {
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .custom-alert-content button {
+            background-color: #4a7bca;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+
+        .custom-alert-content button:hover {
+            background-color: #3a6cb8;
+        }
+
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .reviews-title {
+                font-size: 18px;
+            }
+            
+            .filter-dropdown {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+            
+            .review-photo {
+                width: 70px;
+                height: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="back-icon">&#8592;</div>
+            <h1 class="centered-shop-name" id="shopNameHeading">Your Shop</h1>
+            <div class="settings-icon" id="settingsIcon"></div>
+        </div>
+
+        <div class="reviews-header">
+            <div>
+                <div class="reviews-title">Customer Reviews</div>
+                <div class="reviews-count" id="reviewsCount">5 reviews</div>
+            </div>
+            <select class="filter-dropdown" id="filterDropdown">
+                <option value="recent">Most Recent</option>
+                <option value="highest">Highest Rated</option>
+                <option value="lowest">Lowest Rated</option>
+            </select>
+        </div>
+
+        <div class="food-items" id="reviewsContainer">
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-info">
+                        <div class="reviewer-avatar">D</div>
+                        <div>
+                            <div class="reviewer-name">D*** M***</div>
+                            <div class="review-date">May 15, 2025</div>
+                        </div>
+                    </div>
+                    <div class="review-rating">
+                        <div class="stars-container">
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star empty">★</span>
+                        </div>
+                        <div class="rating-label">Food Quality</div>
+                    </div>
+                </div>
+                <div class="review-content">
+                    <div class="review-section">
+                        <div class="review-section-title">Food Review</div>
+                        <div class="review-text">
+                            The chicken adobo was delicious and flavorful. The meat was tender and the sauce was perfect. Portion size was generous for the price. Would definitely order again!
+                        </div>
+                    </div>
+                    <div class="review-section">
+                        <div class="review-section-title">Service Review</div>
+                        <div class="review-rating" style="align-items: flex-start; margin-bottom: 5px;">
+                            <div class="stars-container">
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                            </div>
+                        </div>
+                        <div class="review-text">
+                            Delivery was prompt and the staff was very friendly. The order was accurate and packaged well. Great service overall!
+                        </div>
+                    </div>
+                    <div class="review-photos">
+                        <img src="{% static 'assets/placeholder.jpg' %}" alt="Food photo" class="review-photo">
+                        <img src="{% static 'assets/placeholder.jpg' %}" alt="Food photo" class="review-photo">
+                    </div>
+                </div>
+            </div>
+
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-info">
+                        <div class="reviewer-avatar">J</div>
+                        <div>
+                            <div class="reviewer-name">J*** P***</div>
+                            <div class="review-date">May 14, 2025</div>
+                        </div>
+                    </div>
+                    <div class="review-rating">
+                        <div class="stars-container">
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star empty">★</span>
+                            <span class="star empty">★</span>
+                        </div>
+                        <div class="rating-label">Food Quality</div>
+                    </div>
+                </div>
+                <div class="review-content">
+                    <div class="review-section">
+                        <div class="review-section-title">Food Review</div>
+                        <div class="review-text">
+                            The pancit was good but a bit too salty for my taste. The lumpia was excellent though, crispy and well-filled.
+                        </div>
+                    </div>
+                    <div class="review-section">
+                        <div class="review-section-title">Service Review</div>
+                        <div class="review-rating" style="align-items: flex-start; margin-bottom: 5px;">
+                            <div class="stars-container">
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star empty">★</span>
+                            </div>
+                        </div>
+                        <div class="review-text">
+                            Delivery took a bit longer than expected but the food was still warm. Staff was apologetic about the delay.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-info">
+                        <div class="reviewer-avatar">M</div>
+                        <div>
+                            <div class="reviewer-name">M*** R***</div>
+                            <div class="review-date">May 12, 2025</div>
+                        </div>
+                    </div>
+                    <div class="review-rating">
+                        <div class="stars-container">
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                        </div>
+                        <div class="rating-label">Food Quality</div>
+                    </div>
+                </div>
+                <div class="review-content">
+                    <div class="review-section">
+                        <div class="review-section-title">Food Review</div>
+                        <div class="review-text">
+                            The sinigang was perfect! Just the right amount of sourness and the vegetables were fresh. The pork was tender and flavorful. Best sinigang I've had in a while!
+                        </div>
+                    </div>
+                    <div class="review-section">
+                        <div class="review-section-title">Service Review</div>
+                        <div class="review-rating" style="align-items: flex-start; margin-bottom: 5px;">
+                            <div class="stars-container">
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                            </div>
+                        </div>
+                        <div class="review-text">
+                            Excellent service! The food arrived earlier than expected and was still hot. The packaging was secure and spill-proof.
+                        </div>
+                    </div>
+                    <div class="review-photos">
+                        <img src="{% static 'assets/placeholder.jpg' %}" alt="Food photo" class="review-photo">
+                    </div>
+                </div>
+            </div>
+
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-info">
+                        <div class="reviewer-avatar">S</div>
+                        <div>
+                            <div class="reviewer-name">S*** L***</div>
+                            <div class="review-date">May 10, 2025</div>
+                        </div>
+                    </div>
+                    <div class="review-rating">
+                        <div class="stars-container">
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star empty">★</span>
+                            <span class="star empty">★</span>
+                            <span class="star empty">★</span>
+                        </div>
+                        <div class="rating-label">Food Quality</div>
+                    </div>
+                </div>
+                <div class="review-content">
+                    <div class="review-section">
+                        <div class="review-section-title">Food Review</div>
+                        <div class="review-text">
+                            The sisig was disappointing. It was too dry and lacked flavor. The portion size was also smaller than expected for the price.
+                        </div>
+                    </div>
+                    <div class="review-section">
+                        <div class="review-section-title">Service Review</div>
+                        <div class="review-rating" style="align-items: flex-start; margin-bottom: 5px;">
+                            <div class="stars-container">
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star empty">★</span>
+                                <span class="star empty">★</span>
+                            </div>
+                        </div>
+                        <div class="review-text">
+                            Delivery was on time but the packaging was not secure. Some of the sauce had spilled inside the bag.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-info">
+                        <div class="reviewer-avatar">A</div>
+                        <div>
+                            <div class="reviewer-name">A*** B***</div>
+                            <div class="review-date">May 8, 2025</div>
+                        </div>
+                    </div>
+                    <div class="review-rating">
+                        <div class="stars-container">
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star half">★</span>
+                        </div>
+                        <div class="rating-label">Food Quality</div>
+                    </div>
+                </div>
+                <div class="review-content">
+                    <div class="review-section">
+                        <div class="review-section-title">Food Review</div>
+                        <div class="review-text">
+                            The halo-halo was amazing! Perfect for the hot weather. All the ingredients were fresh and the ice was finely shaved. Would definitely order again!
+                        </div>
+                    </div>
+                    <div class="review-section">
+                        <div class="review-section-title">Service Review</div>
+                        <div class="review-rating" style="align-items: flex-start; margin-bottom: 5px;">
+                            <div class="stars-container">
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                            </div>
+                        </div>
+                        <div class="review-text">
+                            Excellent service! The delivery was quick and the staff was very friendly. They even included extra toppings at no additional cost.
+                        </div>
+                    </div>
+                    <div class="review-photos">
+                        <img src="{% static 'assets/placeholder.jpg' %}" alt="Food photo" class="review-photo">
+                        <img src="{% static 'assets/placeholder.jpg' %}" alt="Food photo" class="review-photo">
+                        <img src="{% static 'assets/placeholder.jpg' %}" alt="Food photo" class="review-photo">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-bar">
+        <div class="nav-item active" id="homeNav">
+            <div class="nav-icon"><i class="fa-solid fa-house"></i></div>
+            <div>Home</div>
+        </div>
+        <div class="nav-item" id="ordersNav">
+            <div class="nav-icon"><i class="fa-solid fa-table-list"></i></div>
+            <div>Orders</div>
+        </div>
+        <div class="add-button" id="addButton">
+            +
+        </div>
+        <div class="nav-item" id="ordersummaryNav">
+            <div class="nav-icon"><i class="fa-solid fa-file"></i></div>
+            <div>Summary</div>
+        </div>
+        <div class="nav-item" id="overviewNav">
+            <div class="nav-icon"><i class="fa-solid fa-chart-simple"></i></div>
+            <div>Sales</div>
+        </div>
+        </div>
+
+
+        <div class="modal" id="settingsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Settings</h2>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="user-info-section">
+                        <h3>User Information</h3>
+                        <div class="user-info-item">
+                            <label>Name:</label>
+                            <span id="userName">User Name</span>
+                        </div>
+                        <div class="user-info-item">
+                            <label>Shop Name:</label>
+                            <span id="userShopName">Shop Name</span>
+                        </div>
+                        <div class="user-info-item">
+                            <label>Email:</label>
+                            <span id="userEmail">user@example.com</span>
+                        </div>
+                        <div class="user-info-item">
+                            <label>Phone:</label>
+                            <span id="userPhone">+1234567890</span>
+                        </div>
+                        </div>
+                    <div class="logout-container">
+                        <button class="btn-danger" id="logoutBtn">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="customAlertModal" class="custom-alert-modal">
+            <div class="custom-alert-content">
+                <h3 id="customAlertTitle"></h3>
+                <p id="customAlertMessage"></p>
+                <button id="customAlertOkButton">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Remove all mock data and localStorage logic for reviews, orders, food items, etc.
+        // Only keep code that displays real data from the backend
+        // ... existing code ...
+    </script>
+</body>
+</html>

@@ -1,0 +1,912 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golden Bites - Favorites</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* styles.css content starts here */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* App Layout */
+        .app-layout {
+            display: flex;
+            flex-direction: column;
+            width: 100vw;
+            min-height: 100vh;
+            background-color: #fff;
+            border-left: 1px solid #ccc;
+            border-right: 1px solid #ccc;
+            margin: 0 auto;
+            max-width: 600px;
+        }
+
+        /* Main Header */
+        .main-header {
+            position: sticky;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+        }
+
+        .header-left, .header-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .header-left{
+            color: #4a7bca;
+        }
+
+        .header-center {
+            flex: 1;
+            text-align: center;
+        }
+
+        .header-center h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .menu-icon, .back-btn {
+            font-size: 20px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        a.back-btn{
+            color: #4a7bca;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            width: 100%;
+        }
+
+        /* Favorites Header */
+        .favorites-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .favorites-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .favorites-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .action-btn {
+            background-color: #f5f5f5;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            color: #555;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .action-btn.primary {
+            background-color: #4a7bca;
+            color: white;
+        }
+
+        /* Favorites Filter */
+        .favorites-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .filter-btn {
+            background-color: #f5f5f5;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            color: #555;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn.active {
+            background-color: #4a7bca;
+            color: white;
+        }
+
+        /* Favorites Grid */
+        .favorites-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .favorite-item {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .favorite-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .favorite-img-container {
+            position: relative;
+            height: 140px;
+            overflow: hidden;
+        }
+
+        .favorite-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .favorite-item:hover .favorite-img {
+            transform: scale(1.05);
+        }
+
+        .favorite-category {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .favorite-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .favorite-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            color: #555;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .favorite-action-btn:hover {
+            background-color: white;
+            transform: scale(1.1);
+        }
+
+        .favorite-action-btn.remove {
+            color: #ff6b6b;
+        }
+
+        .favorite-action-btn.cart {
+            color: #28c76f;
+        }
+
+        .favorite-info {
+            padding: 12px;
+        }
+
+        .favorite-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1rem;
+            text-decoration: none;
+        }
+
+        .favorite-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .favorite-rating {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .favorite-star {
+            color: #ffcc00;
+        }
+
+        .favorite-price {
+            font-weight: 600;
+            color: #4a7bca;
+            font-size: 0.9rem;
+        }
+
+        /* Empty State */
+        .empty-favorites {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+            color: #888;
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+
+        .empty-text {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .empty-subtext {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            background-color: white;
+            border-top: 1px solid #eee;
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            color: #666;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            color: #4a7bca;
+        }
+
+        .nav-icon {
+            margin-bottom: 5px;
+            font-size: 20px;
+        }
+
+        /* Custom Modal */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .popup-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup-content {
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            width: 85%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .popup-overlay.active .popup-content {
+            transform: translateY(0);
+        }
+
+        .popup-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background-color: #ff6b6b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .popup-icon i {
+            color: white;
+            font-size: 40px;
+        }
+
+        .popup-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .popup-message {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .popup-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .popup-btn {
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: block;
+        }
+
+        .popup-btn-primary {
+            background-color: #4a7bca;
+            color: white;
+            border: none;
+        }
+
+        .popup-btn-primary:hover {
+            background-color: #3f69ae;
+        }
+
+        .popup-btn-secondary {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .popup-btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .favorites-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 15px;
+            }
+            
+            .favorites-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .favorites-actions {
+                gap: 8px;
+            }
+            
+            .action-btn {
+                padding: 6px 10px;
+                font-size: 0.8rem;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <header class="main-header">
+            <div class="header-center">
+                <h1>Golden Bites</h1>
+            </div>
+            <div class="header-right">
+            </div>
+        </header>
+        
+        <main class="main-content">
+            <div class="favorites-header">
+                <div class="favorites-title">My Favorites</div>
+                <div class="favorites-actions">
+                    <button class="action-btn" id="edit-favorites"><i class="fas fa-edit"></i> Edit</button>
+                </div>
+            </div>
+            
+            <div class="favorites-filter">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="breakfast">Breakfast</button>
+                <button class="filter-btn" data-filter="lunch">Lunch</button>
+                <button class="filter-btn" data-filter="dinner">Dinner</button>
+                <button class="filter-btn" data-filter="dessert">Dessert</button>
+            </div>
+            
+            <div class="favorites-grid" id="favorites-grid">
+                </div>
+            
+            <div class="empty-favorites" id="empty-favorites" style="display: none;">
+                <div class="empty-icon">
+                    <i class="far fa-heart"></i>
+                </div>
+                <div class="empty-text">No favorites yet</div>
+                <div class="empty-subtext">Items you favorite will appear here</div>
+                <a href="{% url 'home' %}" class="action-btn primary">Browse Menu</a>
+            </div>
+        </main>
+        
+    <nav class="bottom-nav">
+        <a href="{% url 'home' %}" class="nav-item">
+            <i class="fas fa-home nav-icon"></i>
+            <span>Home</span>
+        </a>
+        <a href="{% url 'shops' %}" class="nav-item">
+            <i class="fas fa-store nav-icon"></i>
+            <span>Shops</span>
+        </a>
+        <a href="{% url 'order_details' %}" class="nav-item">
+            <i class="fas fa-shopping-cart nav-icon"></i>
+            <span>Cart</span>
+        </a>
+        <a href="{% url 'favorites' %}" class="nav-item active">
+            <i class="fas fa-heart nav-icon"></i>
+            <span>Favorites</span>
+        </a>
+        <a href="{% url 'notifications' %}" class="nav-item">
+            <i class="fas fa-bell nav-icon"></i>
+            <span>Notifications</span>
+        </a>
+    </nav>
+
+    <div id="custom-confirm-modal" class="popup-overlay">
+        <div class="popup-content">
+            <div class="popup-icon">
+                <i class="fas fa-question"></i>
+            </div>
+            <div class="popup-title">Confirm Action</div>
+            <div class="popup-message" id="confirm-message">Are you sure you want to proceed?</div>
+            <div class="popup-buttons">
+                <button class="popup-btn popup-btn-primary" id="confirm-yes">Yes</button>
+                <button class="popup-btn popup-btn-secondary" id="confirm-no">No</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Custom modal functions
+        function showCustomConfirm(message) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('custom-confirm-modal');
+                const confirmMessage = document.getElementById('confirm-message');
+                const confirmYes = document.getElementById('confirm-yes');
+                const confirmNo = document.getElementById('confirm-no');
+
+                confirmMessage.textContent = message;
+                modal.classList.add('active');
+
+                const handleYes = () => {
+                    modal.classList.remove('active');
+                    confirmYes.removeEventListener('click', handleYes);
+                    confirmNo.removeEventListener('click', handleNo);
+                    resolve(true);
+                };
+
+                const handleNo = () => {
+                    modal.classList.remove('active');
+                    confirmYes.removeEventListener('click', handleYes);
+                    confirmNo.removeEventListener('click', handleNo);
+                    resolve(false);
+                };
+
+                confirmYes.addEventListener('click', handleYes);
+                confirmNo.addEventListener('click', handleNo);
+            });
+        }
+
+        // Common utility functions (copied from app.js for this page's self-containment)
+        const utils = {
+            // Format price to 2 decimal places with ₱ symbol
+            formatPrice: function(price) {
+                return `₱${parseFloat(price).toFixed(2)}`;
+            },
+            
+            // Capitalize first letter of a string
+            capitalizeFirstLetter: function(string) {
+                if (!string) return '';
+                return string.charAt(0).toUpperCase() + string.slice(1);
+            },
+            
+            // Show toast notification (simplified for this page)
+            showToast: function(message, iconType) {
+                let toastContainer = document.getElementById('toast-container');
+                if (!toastContainer) {
+                    toastContainer = document.createElement('div');
+                    toastContainer.id = 'toast-container';
+                    toastContainer.style.position = 'fixed';
+                    toastContainer.style.bottom = '20px';
+                    toastContainer.style.left = '50%';
+                    toastContainer.style.transform = 'translateX(-50%)';
+                    toastContainer.style.zIndex = '1000';
+                    document.body.appendChild(toastContainer);
+                }
+                const toast = document.createElement('div');
+                toast.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                toast.style.color = 'white';
+                toast.style.padding = '10px 20px';
+                toast.style.borderRadius = '4px';
+                toast.style.marginBottom = '10px';
+                toast.style.fontSize = '14px';
+                toast.textContent = message;
+                toastContainer.appendChild(toast);
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+        };
+
+        // Product data (copied from app.js for consistency)
+        const productData = {
+            products: {
+                'pancake': {
+                    id: 'pancake',
+                    name: 'Pancake',
+                    price: 20.00,
+                    image: '{% static "img/pancake.jpg" %}',
+                    rating: 4.5,
+                    category: 'breakfast',
+                    is_popular: true,
+                    is_recommended: false,
+                    description: 'A classic breakfast staple, our pancakes are fluffy and golden brown. Served with your choice of syrup and butter.'
+                },
+                'waffle': {
+                    id: 'waffle',
+                    name: 'Waffle',
+                    price: 20.00,
+                    image: '{% static "img/waffle.jpg" %}',
+                    rating: 3.8,
+                    category: 'breakfast',
+                    is_popular: true,
+                    is_recommended: false,
+                    description: 'Crispy on the outside and soft on the inside, our waffles are a delightful treat.'
+                },
+                'adobo': {
+                    id: 'adobo',
+                    name: 'Adobo',
+                    price: 75.00,
+                    image: '{% static "img/adobo.png" %}',
+                    rating: 4.2,
+                    category: 'dinner',
+                    is_popular: true,
+                    is_recommended: false,
+                    description: 'A Filipino favorite, our adobo is marinated in soy sauce, vinegar, and spices.'
+                },
+                'hotsilog': {
+                    id: 'hotsilog',
+                    name: 'Hotsilog',
+                    price: 75.00,
+                    image: '{% static "img/hotsilog.jpg" %}',
+                    rating: 4.7,
+                    category: 'breakfast',
+                    is_popular: true,
+                    is_recommended: false,
+                    description: 'A Filipino breakfast classic with hotdog, fried rice, and egg.'
+                },
+                'turon': {
+                    id: 'turon',
+                    name: 'Turon',
+                    price: 15.00,
+                    image: '{% static "img/turon.jpg" %}',
+                    rating: 4.3,
+                    category: 'dessert',
+                    is_popular: false,
+                    is_recommended: true,
+                    description: 'Sweet banana wrapped in spring roll wrapper and fried to golden perfection.'
+                },
+                'sopas': {
+                    id: 'sopas',
+                    name: 'Sopas',
+                    price: 35.00,
+                    image: '{% static "img/sopas.jpg" %}',
+                    rating: 4.1,
+                    category: 'soup',
+                    is_popular: false,
+                    is_recommended: true,
+                    description: 'A creamy Filipino macaroni soup with chicken and vegetables.'
+                }
+            },
+            
+            // Get product by ID
+            getProduct: function(productId) {
+                return this.products[productId] || null;
+            },
+            
+            // Get all products
+            getAllProducts: function() {
+                return Object.values(this.products);
+            }
+        };
+
+        // Favorites functionality (copied and adapted from app.js for consistency)
+        const favoritesSystem = {
+            // Get favorites from localStorage
+            getFavorites: function() {
+                return JSON.parse(localStorage.getItem('favorites')) || [];
+            },
+            
+            // Remove a product from favorites
+            removeFavorite: function(productId) {
+                const favorites = this.getFavorites();
+                const updatedFavorites = favorites.filter(item => item.id !== productId);
+                localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+                utils.showToast('Removed from favorites', 'heart-broken'); // Show toast
+                this.renderFavorites(); // Re-render after removal
+                return true;
+            },
+            
+            // Add product to cart
+            addToCart: function(product) {
+                const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+                
+                // Create new cart item
+                const newItem = {
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    quantity: 1,
+                    addons: [],
+                    image: product.image
+                };
+                
+                // Add to cart
+                cartItems.push(newItem);
+                
+                // Save to localStorage
+                localStorage.setItem('cartItems', JSON.stringify(cartItems));
+                utils.showToast(`${product.name} added to cart`, 'cart'); // Show toast
+            },
+
+            // Render favorites on the page
+            renderFavorites: function(filter = 'all') {
+                const favoritesGrid = document.getElementById('favorites-grid');
+                const emptyFavorites = document.getElementById('empty-favorites');
+                const favorites = this.getFavorites();
+                
+                // Clear favorites grid
+                if (favoritesGrid) favoritesGrid.innerHTML = '';
+                
+                let visibleCount = 0;
+                
+                if (favorites.length === 0) {
+                    if (favoritesGrid) favoritesGrid.style.display = 'none';
+                    if (emptyFavorites) emptyFavorites.style.display = 'flex';
+                    return;
+                }
+                
+                favorites.forEach(item => {
+                    const matchesFilter = (filter === 'all' || item.category === filter);
+                    
+                    if (matchesFilter) {
+                        const favoriteItem = document.createElement('div');
+                        favoriteItem.className = 'favorite-item';
+                        favoriteItem.setAttribute('data-category', item.category);
+                        favoriteItem.setAttribute('data-id', item.id); // Add data-id for easy removal
+                        
+                        favoriteItem.innerHTML = `
+                            <div class="favorite-img-container">
+                                <img src="${item.image}" alt="${item.name}" class="favorite-img" onerror="this.onerror=null;this.src='https://placehold.co/150x140/E0E0E0/333333?text=No+Image';">
+                                <div class="favorite-category">${utils.capitalizeFirstLetter(item.category)}</div>
+                                <div class="favorite-actions">
+                                    <button class="favorite-action-btn remove" data-id="${item.id}">
+                                        <i class="fas fa-heart-broken"></i>
+                                    </button>
+                                    <button class="favorite-action-btn cart" data-id="${item.id}">
+                                        <i class="fas fa-cart-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="favorite-info">
+                                <a href="{% url 'product_detail' %}?id=${item.id}" class="favorite-name">${item.name}</a>
+                                <div class="favorite-details">
+                                    <div class="favorite-rating">
+                                        <span class="favorite-star">⭐</span>
+                                        <span>${item.rating.toFixed(1)}</span>
+                                    </div>
+                                    <div class="favorite-price">${utils.formatPrice(item.price)}</div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        if (favoritesGrid) favoritesGrid.appendChild(favoriteItem);
+                        visibleCount++;
+                    }
+                });
+
+                if (visibleCount === 0) {
+                    if (favoritesGrid) favoritesGrid.style.display = 'none';
+                    if (emptyFavorites) emptyFavorites.style.display = 'flex';
+                } else {
+                    if (favoritesGrid) favoritesGrid.style.display = 'grid';
+                    if (emptyFavorites) emptyFavorites.style.display = 'none';
+                }
+                
+                this.attachEventListeners(); // Attach event listeners after rendering
+            },
+
+            attachEventListeners: function() {
+                const self = this; // Reference to favoritesSystem
+                const removeButtons = document.querySelectorAll('.favorite-action-btn.remove');
+                const addToCartButtons = document.querySelectorAll('.favorite-action-btn.cart');
+                const favoritesGrid = document.getElementById('favorites-grid');
+                const editButton = document.getElementById('edit-favorites');
+
+                // Remove functionality
+                removeButtons.forEach(button => {
+                    button.removeEventListener('click', self.handleRemoveClick); // Prevent duplicate listeners
+                    button.addEventListener('click', self.handleRemoveClick);
+                });
+
+                // Add to cart functionality
+                addToCartButtons.forEach(button => {
+                    button.removeEventListener('click', self.handleAddToCartClick); // Prevent duplicate listeners
+                    button.addEventListener('click', self.handleAddToCartClick);
+                });
+
+                // Edit mode toggle
+                if (editButton) {
+                    editButton.removeEventListener('click', self.handleEditClick); // Prevent duplicate listeners
+                    editButton.addEventListener('click', self.handleEditClick);
+                }
+            },
+
+            handleRemoveClick: async function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const productId = this.getAttribute('data-id');
+                const favoriteItem = this.closest('.favorite-item');
+                
+                const confirmed = await showCustomConfirm('Remove this item from your favorites?');
+                if (confirmed) {
+                    favoriteItem.style.opacity = '0';
+                    favoriteItem.style.transform = 'scale(0.8)';
+
+                    setTimeout(() => {
+                        favoritesSystem.removeFavorite(productId); // Call the system's remove method
+                    }, 300);
+                }
+            },
+
+            handleAddToCartClick: function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const productId = this.getAttribute('data-id');
+                const product = productData.getProduct(productId);
+                
+                if (product) {
+                    favoritesSystem.addToCart(product); // Call the system's add to cart method
+                    
+                    // Visual feedback
+                    this.innerHTML = '<i class="fas fa-check"></i>';
+                    this.style.backgroundColor = '#28c76f';
+                    this.style.color = 'white';
+                    
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-cart-plus"></i>';
+                        this.style.backgroundColor = '';
+                        this.style.color = '';
+                    }, 1500);
+                }
+            },
+
+            handleEditClick: function() {
+                const favoritesGrid = document.getElementById('favorites-grid');
+                const removeButtons = document.querySelectorAll('.favorite-action-btn.remove');
+                const addToCartButtons = document.querySelectorAll('.favorite-action-btn.cart');
+
+                const isEditing = favoritesGrid.classList.toggle('editing');
+                this.innerHTML = isEditing ? 
+                    '<i class="fas fa-check"></i> Done' : 
+                    '<i class="fas fa-edit"></i> Edit';
+
+                removeButtons.forEach(btn => {
+                    btn.style.display = isEditing ? 'flex' : 'none';
+                });
+                
+                addToCartButtons.forEach(btn => {
+                    btn.style.display = isEditing ? 'none' : 'flex';
+                });
+            }
+        };
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial render of favorites
+            favoritesSystem.renderFavorites();
+
+            // Filter functionality
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    const filter = this.getAttribute('data-filter');
+                    favoritesSystem.renderFavorites(filter);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

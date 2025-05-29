@@ -1,0 +1,586 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{{ page_title|default:"Overview - Golden Bites" }}</title>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #0047ab; /* A deeper blue for primary elements */
+            --light-blue-bg: #e6f0ff; /* Light blue for backgrounds/accents */
+            --text-dark: #333;
+            --text-medium: #666;
+            --text-light: #888;
+            --border-color: #e0e0e0;
+            --card-bg: #ffffff;
+            --page-bg: #f5f5f5;
+            --green-accent: #4caf50;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--page-bg);
+            min-height: 100vh;
+            color: var(--text-dark);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app-container {
+            max-width: 430px; /* Consistent with other shop owner pages */
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-link {
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 20px;
+        }
+        .back-link .fa-arrow-left {
+            margin-right: 5px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .header-logo {
+            width: 35px;
+            height: 35px;
+        }
+
+
+        /* Main Content Area */
+        .main-content {
+            flex-grow: 1;
+            padding: 20px 15px; /* Reduced horizontal padding slightly */
+            overflow-y: auto;
+        }
+
+        /* Overview Title Bar */
+        .overview-title-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .overview-title-bar h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        .refresh-button {
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .refresh-button:hover {
+            background-color: #003a8c;
+        }
+
+        /* Time Filter */
+        .time-filter {
+            display: flex;
+            gap: 8px; /* Reduced gap */
+            margin-bottom: 25px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; /* Firefox */
+            padding-bottom: 5px; /* Space for shadow or content below */
+        }
+        .time-filter::-webkit-scrollbar { display: none; } /* Chrome, Safari, Opera */
+
+        .time-option {
+            padding: 7px 14px; /* Slightly smaller padding */
+            font-size: 13px; /* Slightly smaller font */
+            color: var(--text-medium);
+            background-color: #ebebeb; /* Lighter grey for inactive */
+            border: 1px solid transparent;
+            border-radius: 18px; /* Slightly smaller radius */
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+        .time-option.active {
+            background-color: var(--primary-blue);
+            color: white;
+            font-weight: 500;
+            border-color: var(--primary-blue);
+        }
+        .time-option:not(.active):hover {
+            background-color: #e0e0e0;
+        }
+
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px; /* Reduced gap */
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background-color: var(--card-bg);
+            border-radius: 12px; /* Rounded corners */
+            padding: 18px 15px; /* Adjusted padding */
+            text-align: left; /* Align text to left as per image */
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07); /* Softer shadow */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .stat-icon {
+            font-size: 20px; /* Slightly smaller icon */
+            margin-bottom: 8px; /* Reduced margin */
+            color: var(--primary-blue); /* Using primary blue */
+            width: 30px;
+            height: 30px;
+            background-color: var(--light-blue-bg);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .stat-card.sales .stat-icon { color: var(--green-accent); background-color: #e8f5e9; } /* Green for sales */
+        .stat-card.revenue .stat-icon { color: var(--primary-blue); background-color: var(--light-blue-bg); }
+        .stat-card.orders .stat-icon { color: #ff9800; background-color: #fff3e0; } /* Orange for orders */
+        .stat-card.items-sold .stat-icon { color: #9c27b0; background-color: #f3e5f5; } /* Purple for items */
+
+        .stat-label {
+            font-size: 13px; /* Slightly larger for readability */
+            color: var(--text-medium);
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        .stat-value {
+            font-size: 20px; /* Slightly larger */
+            font-weight: 700;
+            color: var(--text-dark);
+            line-height: 1.2;
+        }
+
+
+        /* Section Styling (Top Items, Recent Orders) */
+        .data-section {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .section-title {
+            font-size: 17px; /* Slightly smaller */
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .view-all-link {
+            font-size: 13px;
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .view-all-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Top Items List */
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: var(--page-bg); /* Lighter bg for list items */
+            border-radius: 8px;
+        }
+        .item-rank {
+            width: 28px; /* Slightly smaller */
+            height: 28px;
+            background-color: var(--primary-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 13px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .item-image-placeholder {
+            width: 45px; /* Slightly smaller */
+            height: 45px;
+            border-radius: 6px;
+            background-color: #e0e0e0; /* Placeholder color */
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            font-size: 18px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .item-image-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .item-details {
+            flex-grow: 1;
+            min-width: 0; /* Allow text to truncate */
+        }
+        .item-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .item-category {
+            font-size: 12px;
+            color: var(--text-medium);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .item-sales-count {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary-blue);
+            margin-left: 10px; /* Space from details */
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* Recent Orders List */
+        .order-status {
+            font-size: 11px; /* Smaller status */
+            font-weight: 500;
+            padding: 3px 8px; /* Adjusted padding */
+            border-radius: 10px; /* More rounded */
+            text-transform: capitalize;
+            min-width: 70px; /* Ensure some width */
+            text-align: center;
+        }
+        .status-pending { background-color: #ffe0b2; color: #e65100; border: 1px solid #ffcc80;}
+        .status-preparing { background-color: #bbdefb; color: #0d47a1; border: 1px solid #90caf9;}
+        .status-ready { background-color: #c8e6c9; color: #1b5e20; border: 1px solid #a5d6a7;}
+        .status-completed { background-color: #d1c4e9; color: #311b92; border: 1px solid #b39ddb;} /* Purple for completed */
+        .status-cancelled { background-color: #ffcdd2; color: #b71c1c; border: 1px solid #ef9a9a;}
+
+
+        /* Bottom Navigation Bar Placeholder */
+        .bottom-nav-placeholder {
+            height: 60px; /* Adjust based on your actual nav bar height */
+            background-color: transparent; /* Or match page bg */
+        }
+        
+        /* No Data Message */
+        .no-data-message {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-medium);
+            font-size: 15px;
+        }
+        .no-data-message i {
+            font-size: 24px;
+            margin-bottom: 10px;
+            display: block;
+            color: var(--text-light);
+        }
+
+        /* For the sticky bottom nav */
+        .nav-bar {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background-color: var(--card-bg);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px; /* Match app-container */
+            margin: 0 auto;
+            padding: 8px 0; /* Adjusted padding */
+            z-index: 1000;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 11px; /* Smaller font */
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 5px 8px; /* Adjusted padding */
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .nav-icon {
+            font-size: 18px; /* Smaller icon */
+            margin-bottom: 3px;
+        }
+
+        .nav-item.active {
+            color: var(--primary-blue);
+        }
+        .nav-item:hover:not(.active) {
+            color: var(--text-medium);
+        }
+
+        .add-button-container { /* Wrapper for positioning */
+            position: relative; /* Needed for absolute positioning of the button if it overlaps */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .add-button {
+            width: 48px; /* Slightly smaller */
+            height: 48px;
+            background-color: var(--primary-blue);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            margin-top: -20px; /* Adjust to make it float above */
+            font-size: 22px;
+            color: white;
+            cursor: pointer;
+            border: 2px solid white; /* Optional: for a nice visual separation */
+            z-index: 1; /* Ensure it's above other items if overlapping */
+        }
+        .add-button:hover {
+            background-color: #003a8c;
+            }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <a href="{% url 'dashboard' %}" class="back-link">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="header-title">{{ food_stall_name|default:"Golden Bites Shop" }}</h1>
+            <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-logo">
+        </div>
+        
+        <div class="main-content">
+            <div class="overview-title-bar">
+                <h1>Overview</h1>
+                <button class="refresh-button" onclick="location.reload();">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+        </div>
+        
+        <div class="time-filter">
+                <div class="time-option">12 months</div>
+                <div class="time-option">30 days</div>
+                <div class="time-option">7 days</div>
+                <div class="time-option active">24 hours</div>
+        </div>
+        
+        <div class="stats-grid">
+                <div class="stat-card sales">
+                    <div class="stat-icon"><i class="fas fa-wallet"></i></div>
+                    <div>
+                <div class="stat-label">Total Sales</div>
+                        <div class="stat-value">₱{{ total_sales|floatformat:2|intcomma|default:"0.00" }}</div>
+                    </div>
+            </div>
+                <div class="stat-card revenue">
+                     <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                    <div>
+                <div class="stat-label">Total Revenue</div>
+                        <div class="stat-value">₱{{ total_revenue|floatformat:2|intcomma|default:"0.00" }}</div>
+                    </div>
+            </div>
+                <div class="stat-card orders">
+                    <div class="stat-icon"><i class="fas fa-box-open"></i></div>
+                    <div>
+                <div class="stat-label">Total Orders</div>
+                        <div class="stat-value">{{ total_completed_orders|intcomma|default:"0" }}</div>
+                    </div>
+            </div>
+                <div class="stat-card items-sold">
+                     <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
+                    <div>
+                <div class="stat-label">Items Sold</div>
+                        <div class="stat-value">{{ total_items_sold|intcomma|default:"0" }}</div>
+            </div>
+        </div>
+            </div>
+            
+            <div class="data-section">
+                <div class="section-header">
+                    <h2 class="section-title">Top Items</h2>
+                    <a href="#" class="view-all-link">View All</a>
+                </div>
+                {% if top_items %}
+                    <div class="items-list">
+                        {% for item in top_items %}
+                        <div class="list-item">
+                            <div class="item-rank">{{ forloop.counter }}</div>
+                            <div class="item-image-placeholder">
+                                {% if item.image_url %}
+                                    <img src="{{ item.image_url }}" alt="{{ item.product_name }}">
+                                {% else %}
+                                    <i class="fas fa-utensils"></i> <!-- Placeholder icon -->
+                                {% endif %}
+                            </div>
+                            <div class="item-details">
+                                <div class="item-name">{{ item.product_name }}</div>
+                                <div class="item-category">{{ item.category|default:"N/A" }}</div>
+                            </div>
+                            <div class="item-sales-count">{{ item.total_sold|default:"0" }} sold</div>
+                        </div>
+                        {% endfor %}
+        </div>
+                {% else %}
+                    <p class="no-data-message"><i class="fas fa-chart-pie"></i>No sales data available yet to determine top items.</p>
+                {% endif %}
+            </div>
+            
+            <div class="data-section">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Orders</h2>
+                    <a href="{% url 'orders' %}" class="view-all-link">View All</a>
+                </div>
+                 {% if recent_orders %}
+                    <div class="items-list">
+                        {% for order in recent_orders %}
+                        <div class="list-item">
+                            <!-- No rank for recent orders, maybe an icon or just details -->
+                            <div class="item-image-placeholder"> <!-- Using this class for consistent styling if we add an icon -->
+                                <i class="fas fa-receipt" style="font-size: 20px; color: var(--text-medium);"></i>
+                            </div>
+                            <div class="item-details">
+                                <div class="item-name">Order #S{{ order.id|stringformat:"04d" }}</div> {# Example ID formatting #}
+                                <div class="item-category">{{ order.order_time|date:"g:i A" }}</div>
+                            </div>
+                            <div class="order-status status-{{ order.status|lower }}">{{ order.status }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                     <p class="no-data-message"><i class="fas fa-history"></i>No recent orders found.</p>
+                {% endif %}
+            </div>
+            <div class="bottom-nav-placeholder"></div> <!-- To prevent content from hiding behind fixed nav -->
+        </div>
+        
+        <!-- Navigation Bar -->
+            <div class="nav-bar">
+            <a href="{% url 'dashboard' %}" class="nav-item" id="homeNav">
+                <div class="nav-icon"><i class="fa-solid fa-house"></i></div>
+                <div>Home</div>
+            </a>
+            <a href="{% url 'orders' %}" class="nav-item" id="ordersNav">
+                <div class="nav-icon"><i class="fa-solid fa-table-list"></i></div>
+                <div>Orders</div>
+            </a>
+            <div class="add-button-container">
+                 <a href="{% url 'add-item' %}" class="add-button" id="addButton">
+                    <i class="fa-solid fa-plus"></i>
+                </a>
+            </div>
+            <a href="{% url 'food_list' %}" class="nav-item" id="foodlistNav"> <!-- Changed from ordersummary to food_list -->
+                <div class="nav-icon"><i class="fa-solid fa-utensils"></i></div> <!-- Changed icon -->
+                <div>Menu</div> <!-- Changed label -->
+            </a>
+            <a href="{% url 'overview' %}" class="nav-item active" id="overviewNav"> <!-- Overview is active here -->
+                <div class="nav-icon"><i class="fa-solid fa-chart-simple"></i></div>
+                <div>Sales</div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Logic for time filter (can be expanded later)
+            const timeOptions = document.querySelectorAll('.time-filter .time-option');
+            timeOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    timeOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    // TODO: Add logic to fetch/filter data based on selected time
+                    console.log('Time filter selected:', this.textContent);
+                });
+            });
+            
+            // Active state for bottom nav (simple version based on current page)
+            // More robust would be to pass active tab from Django view
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-bar .nav-item');
+            navItems.forEach(item => {
+                if (item.getAttribute('href') === currentPath) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active'); // Ensure only one is active if hardcoded
+                }
+            });
+            // Specifically make overview active if on overview page (since URL might match)
+             if (currentPath.includes("{% url 'overview' %}")) {
+                document.querySelectorAll('.nav-bar .nav-item').forEach(opt => opt.classList.remove('active'));
+                document.getElementById('overviewNav')?.classList.add('active');
+            }
+
+
+        });
+    </script>
+</body>
+</html>

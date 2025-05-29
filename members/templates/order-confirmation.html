@@ -1,0 +1,195 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{{ page_title|default:"Order Confirmed" }} - Golden Bites</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --text-color: #2c3e50;
+            --light-text-color: #7f8c8d;
+            --border-color: #e0e0e0;
+            --background-color: #fff;
+            --page-background: #f4f6f8;
+            --blue-text: #2F80ED;
+            --dark-button-blue: #2962FF;
+            --success-green: #28a745;
+            --success-green-light: #e9f7ec;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--page-background);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .app-container {
+            max-width: 450px;
+            width: 100%;
+            background-color: var(--page-background);
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .confirmation-card {
+            background-color: var(--background-color);
+            border-radius: 12px;
+            padding: 30px 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .icon-success {
+            font-size: 50px;
+            color: var(--success-green);
+            background-color: var(--success-green-light);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .confirmation-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 10px;
+        }
+        .confirmation-subtitle {
+            font-size: 15px;
+            color: var(--light-text-color);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        .order-info {
+            background-color: var(--page-background);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 25px;
+            border: 1px dashed var(--border-color);
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 15px;
+        }
+        .info-item .label {
+            color: var(--light-text-color);
+        }
+        .info-item .value {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        .actions-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .action-btn {
+            display: block;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+        .action-btn.primary {
+            background-color: var(--dark-button-blue);
+            color: white;
+        }
+        .action-btn.primary:hover {
+            background-color: var(--blue-text);
+        }
+        .action-btn.secondary {
+            background-color: #e9ecef;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+        .action-btn.secondary:hover {
+            background-color: #dfe3e6;
+        }
+
+        /* Django Messages (if any are passed here) */
+        .messages-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1050;
+            width: calc(100% - 40px);
+            max-width: 410px; /* max-width of app-container - padding */
+        }
+        .alert {
+            padding: 12px 18px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-warning {
+            color: #856404;
+            background-color: #fff3cd;
+            border-color: #ffeeba;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="confirmation-card">
+            <div class="icon-success">
+                <i class="fas fa-check"></i>
+            </div>
+            <h1 class="confirmation-title">Order Placed Successfully!</h1>
+            <p class="confirmation-subtitle">Thank you for your order. You can track its progress or head back to the homepage.</p>
+
+            <div class="order-info">
+                <div class="info-item">
+                    <span class="label">Order ID:</span>
+                    <span class="value">#{{ order_id|default:"N/A" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Your Queue Number:</span>
+                    <span class="value">{{ queue_number|default:"N/A" }}</span>
+                </div>
+            </div>
+
+            <div class="actions-container">
+                <a href="{% url 'order_tracking' %}" class="action-btn primary"> <!-- Placeholder for actual tracking URL -->
+                    <i class="fas fa-map-marker-alt"></i> Track Your Order
+                </a>
+                <a href="{% url 'home' %}" class="action-btn secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

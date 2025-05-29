@@ -1,0 +1,521 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>{{ page_title|default:"Track Order" }} - Golden Bites</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --primary-brand-color: #4a90e2; /* Blue theme */
+        --primary-brand-color-hover: #3a7bc8;
+        --text-color-dark: #2d2d2d;
+        --text-color-medium: #555;
+        --text-color-light: #777;
+        --border-color-soft: #e0e0e0;
+        --border-color-medium: #cccccc;
+        --background-color-page: #f7f7f7;
+        --background-color-card: #ffffff;
+        --success-color: #198754; /* Green for completed check */
+        --disabled-color: #adb5bd; /* For future/pending steps */
+        --cancelled-color: #dc3545; /* Red for cancelled */
+    }
+    /* Reset and base styles */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    body {
+        font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--background-color-page);
+        color: var(--text-color-dark);
+        min-height: 100vh;
+        overflow-x: hidden;
+        line-height: 1.6;
+    }
+
+    /* App Container - consistent with other pages */
+    .app-container {
+        max-width: 560px; /* Standardized width */
+        margin: 0 auto;
+        background-color: var(--background-color-page); /* Can be card or page depending on if header is outside */
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    /* Top Bar - consistent */
+    .top-bar {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        background-color: var(--background-color-card);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .top-bar .back-button {
+        font-size: 1.3rem;
+        color: var(--text-color-dark);
+        text-decoration: none;
+        margin-right: 15px;
+        background: none; border: none; padding: 5px; cursor: pointer;
+    }
+    .top-bar .page-title-main {
+        flex-grow: 1;
+        text-align: center;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-color-dark);
+        transform: translateX(-12px); /* Adjust for back button width */
+    }
+    .top-bar .placeholder-right {
+        width: 38px; /* approx back button size */
+    }
+
+    /* Main Content Area */
+    .tracking-content-area {
+        padding: 20px 15px;
+        flex-grow: 1;
+    }
+
+    .no-order-message {
+        text-align: center;
+        padding: 40px 20px;
+        background-color: var(--background-color-card);
+        border-radius: 10px;
+        margin: 20px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .no-order-message i {
+        font-size: 2.5rem;
+        color: var(--primary-brand-color);
+        margin-bottom: 15px;
+    }
+    .no-order-message p {
+        font-size: 1.1rem;
+        color: var(--text-color-medium);
+        margin-bottom: 20px;
+    }
+
+
+    .card-section { /* Re-using from payment for consistency */
+        background-color: var(--background-color-card);
+        border-radius: 10px;
+        padding: 18px;
+        margin-bottom: 18px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .card-section .card-header-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: var(--text-color-dark);
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color-soft);
+    }
+
+    .order-current-status {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--primary-brand-color);
+        padding: 6px 12px;
+        background-color: #e9f3fe; /* Light blue bg */
+        border-radius: 20px;
+        display: inline-block;
+        margin-top: -10px; /* Pull up slightly */
+        margin-bottom: 10px;
+    }
+    .order-current-status.cancelled {
+        color: var(--danger-color);
+        background-color: #f8d7da; /* Light red bg */
+    }
+    
+    .info-line { /* Re-using from payment */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+        padding: 6px 0;
+        color: var(--text-color-medium);
+    }
+    .info-line .label { /* color: var(--text-color-light); */ }
+    .info-line .value { color: var(--text-color-dark); font-weight: 500; }
+
+
+    /* Progress Tracker */
+    .progress-tracker-visual {
+        margin: 25px 0;
+    }
+    .progress-steps-list {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 15px; /* Reduced gap */
+    }
+    .progress-line { /* The vertical line */
+        position: absolute;
+        left: 19px; /* Center of a 40px icon */
+        top: 20px;  /* Start below first icon center */
+        bottom: 20px; /* End above last icon center */
+        width: 2px;
+        background-color: var(--border-color-medium);
+        z-index: 1;
+        transition: background-color 0.3s ease;
+    }
+    .progress-line.cancelled-line {
+        background-color: var(--border-color-soft); /* Softer line for cancelled */
+    }
+
+    .progress-step {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        position: relative;
+        z-index: 2;
+    }
+    .step-icon-wrapper {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--background-color-card); /* Allows border to show */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem; /* Icon size */
+        color: var(--disabled-color);
+        border: 2px solid var(--border-color-medium);
+        transition: all 0.3s ease;
+    }
+    .step-label-text {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--text-color-medium);
+        transition: all 0.3s ease;
+    }
+
+    /* Active Step */
+    .progress-step.active .step-icon-wrapper {
+        background-color: var(--primary-brand-color);
+        color: white;
+        border-color: var(--primary-brand-color);
+    }
+    .progress-step.active .step-label-text {
+        color: var(--primary-brand-color);
+        font-weight: 600;
+    }
+    /* Completed Step - checkmark */
+    .progress-step.completed .step-icon-wrapper {
+        background-color: var(--success-color);
+        color: white;
+        border-color: var(--success-color);
+    }
+    .progress-step.completed .step-label-text {
+        color: var(--text-color-dark);
+        font-weight: 500;
+    }
+     /* For future steps (default state, but can be explicit) */
+    .progress-step.pending .step-icon-wrapper {
+        background-color: var(--background-color-page);
+        color: var(--disabled-color);
+        border-color: var(--border-color-soft);
+    }
+    .progress-step.pending .step-label-text {
+        color: var(--text-color-light);
+    }
+    /* Cancelled Step Styling */
+    .progress-step.cancelled-step .step-icon-wrapper {
+        background-color: var(--disabled-bg-color);
+        color: var(--disabled-text-color);
+        border-color: var(--border-color-soft);
+    }
+    .progress-step.cancelled-step .step-label-text {
+        color: var(--text-color-light);
+        text-decoration: line-through;
+    }
+    .progress-step.current-cancelled .step-icon-wrapper { /* The specific step that was 'active' when cancelled */
+        background-color: var(--cancelled-color);
+        color: white;
+        border-color: var(--cancelled-color);
+    }
+     .progress-step.current-cancelled .step-label-text {
+        color: var(--cancelled-color);
+        font-weight: 600;
+     }
+
+
+    /* Order Summary Items (simplified for tracking) */
+    .order-item-summary {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        font-size: 0.9rem;
+        border-bottom: 1px dashed var(--border-color-soft);
+    }
+    .order-item-summary:last-child { border-bottom: none; }
+    .order-item-summary .name { color: var(--text-color-medium); }
+    .order-item-summary .qty { color: var(--text-color-light); margin-left: 5px;}
+    .order-item-summary .price { color: var(--text-color-dark); font-weight: 500; }
+
+    /* Action Buttons */
+    .tracking-action-buttons {
+        margin-top: 25px;
+        display: flex;
+        flex-direction: column; /* Stack buttons */
+        gap: 12px;
+    }
+    .action-button {
+        display: block;
+        width: 100%;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-align: center;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+    .action-button.primary {
+        background-color: var(--primary-brand-color);
+        color: white;
+        border: 1px solid var(--primary-brand-color);
+    }
+    .action-button.primary:hover {
+        background-color: var(--primary-brand-color-hover);
+        border-color: var(--primary-brand-color-hover);
+    }
+    .action-button.secondary {
+        background-color: var(--background-color-card);
+        color: var(--primary-brand-color);
+        border: 1px solid var(--primary-brand-color);
+    }
+    .action-button.secondary:hover {
+        background-color: #e9f3fe; /* Light blue on hover */
+    }
+    
+    /* Estimated Time (Example styling if used) */
+    .estimated-delivery-time {
+        text-align: center;
+        margin: 15px 0;
+        padding: 10px;
+        background-color: #e9f3fe;
+        border-radius: 8px;
+    }
+    .estimated-delivery-time .label { font-size: 0.85rem; color: var(--text-color-light); }
+    .estimated-delivery-time .time { font-size: 1.2rem; font-weight: 600; color: var(--primary-brand-color); }
+
+</style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="top-bar">
+            <a href="{% url 'home' %}" class="back-button" aria-label="Back to Home">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="page-title-main">{{ page_title|default:"Track Order" }}</h1>
+            <div class="placeholder-right"></div>
+    </header>
+    
+        {% if messages %}
+        <div class="messages-container" style="padding: 15px;">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}" role="alert"
+                 style="padding: 10px; margin-bottom: 10px; border-radius: 5px; background-color: #e9f3fe; border: 1px solid var(--primary-brand-color); color: var(--primary-brand-color);">
+                {{ message }}
+            </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+
+        <main class="tracking-content-area">
+            {% if order %}
+                <section class="card-section order-identity">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <h2 class="card-header-title" style="margin-bottom:0; border-bottom:0; padding-bottom:0;">Order #{{ order.queue_id|default:order.id }}</h2>
+                        <span class="order-current-status {% if order.status == 'Cancelled' %}cancelled{% endif %}">{{ order.status }}</span>
+                    </div>
+                    <div class="info-line">
+                        <span class="label">Date:</span>
+                        <span class="value">{{ order.order_time|date:"M d, Y, P" }}</span>
+                    </div>
+                    {% if order.food_stall %}
+                    <div class="info-line">
+                        <span class="label">Stall:</span>
+                        <span class="value">{{ order.food_stall.stall_name }}</span>
+                    </div>
+                    {% endif %}
+                </section>
+                
+                {# Estimated Time - Placeholder, logic would be more complex #}
+                {# <div class="estimated-delivery-time">
+                    <div class="label">Estimated Arrival / Ready Time</div>
+                    <div class="time">3-5 Minutes</div> 
+                </div> #}
+                
+                <section class="card-section progress-details">
+                    <h2 class="card-header-title">Order Progress</h2>
+                    <div class="progress-tracker-visual">
+                        <div class="progress-steps-list">
+                            <div class="progress-line {% if order.status == 'Cancelled' %}cancelled-line{% endif %}"></div>
+                            {# Use current_status_index passed from the view #}
+                            {% for step_status_label in status_sequence %}
+                                {% with forloop_index=forloop.counter0 %}
+                                    <div class="progress-step 
+                                        {% if order.status == 'Cancelled' %}
+                                            {% if forloop_index == current_status_index %}current-cancelled{% else %}cancelled-step{% endif %}
+                                        {% elif forloop_index < current_status_index %}completed
+                                        {% elif forloop_index == current_status_index %}active
+                                        {% else %}pending
+                                        {% endif %}
+                                        {% if order.status == 'Completed' and step_status_label == 'Completed' %}completed{% endif %}
+                                        ">
+                                        <div class="step-icon-wrapper">
+                                            {% if order.status == 'Cancelled' %}
+                                                <i class="fas fa-times"></i>
+                                            {% elif forloop_index < current_status_index or order.status == 'Completed' and step_status_label == 'Completed' %}
+                                                <i class="fas fa-check"></i>
+                                            {% elif step_status_label == 'Pending' %}
+                                                <i class="fas fa-receipt"></i>
+                                            {% elif step_status_label == 'Preparing' %}
+                                                <i class="fas fa-utensils"></i>
+                                            {% elif step_status_label == 'Ready' %}
+                                                <i class="fas fa-box-open"></i>
+                                            {% elif step_status_label == 'Completed' %}
+                                                <i class="fas fa-check-circle"></i>
+                                            {% else %}
+                                                <i class="fas fa-hourglass-half"></i> {# Icon for pending steps #}
+                                            {% endif %}
+                                        </div>
+                                        <div class="step-label-text">{{ step_status_label }}</div>
+                                    </div>
+                                {% endwith %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card-section summary-items">
+                    <h2 class="card-header-title">Items</h2>
+                    {% for item in order.orderitem_set.all %}
+                        <div class="order-item-summary">
+                            <span class="name">{{ item.product.product_name }}</span>
+                            <span class="qty">(x{{ item.quantity }})</span>
+                            <span class="price">₱{{ item.price|intcomma }}</span>
+                </div>
+                    {% empty %}
+                        <p>No items found in this order.</p>
+                    {% endfor %}
+                    <div class="info-line" style="padding-top: 10px; margin-top:10px; border-top: 1px solid var(--border-color-soft);">
+                        <span class="label" style="font-weight: 600;">Grand Total:</span>
+                        <span class="value" style="font-weight: 700; color: var(--primary-brand-color);">₱{{ order.total_price|intcomma }}</span>
+            </div>
+                </section>
+            
+                <section class="card-section additional-order-details">
+                    <h2 class="card-header-title">Further Details</h2>
+                    <div class="info-line">
+                        <span class="label">Payment Method:</span>
+                        <span class="value">{{ order.payment.get_payment_method_display|default:order.payment.payment_method|default:"N/A" }}</span>
+                    </div>
+                    <div class="info-line">
+                        <span class="label">Fulfilment:</span>
+                        <span class="value">{{ order.get_order_type_display|default:"N/A" }}</span>
+                </div>
+                    {% if order.order_summary %}
+                    <div class="info-line" style="flex-direction: column; align-items: flex-start;">
+                        <span class="label" style="margin-bottom: 5px;">Note:</span>
+                        <span class="value" style="white-space: pre-wrap;">{{ order.order_summary }}</span>
+                </div>
+                    {% endif %}
+                </section>
+                
+                <div class="tracking-action-buttons">
+                    {% if order.status == 'Completed' and not order.customer_acknowledged_at %}
+                        <button id="confirmReceiptBtn" class="action-button primary" data-order-id="{{ order.id }}">
+                            Confirm Receipt & Close Order
+                        </button>
+                    {% endif %}
+                    <a href="{% url 'home' %}" class="action-button secondary">Back to Homepage</a>
+                    {# Consider adding a 'View Receipt' or 'Order Again' button if applicable #}
+                </div>
+                
+            {% else %}
+                <div class="no-order-message">
+                    <i class="fas fa-box-open"></i>
+                    <p>No order found to track, or you haven't placed an order yet.</p>
+                    <div class="tracking-action-buttons" style="margin-top: 20px;">
+                         <a href="{% url 'home' %}" class="action-button primary">Go to Homepage</a>
+                </div>
+                </div>
+            {% endif %}
+    </main>
+    </div>
+    {# No custom alert modal needed here based on current functionality #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+            const confirmReceiptBtn = document.getElementById('confirmReceiptBtn');
+
+            if (confirmReceiptBtn) {
+                confirmReceiptBtn.addEventListener('click', function() {
+                    const orderId = this.dataset.orderId;
+                    this.disabled = true;
+                    this.textContent = 'Processing...';
+
+                    // Retrieve CSRF token
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : getCookie('csrftoken');
+
+                    fetch(`/acknowledge_order_receipt/${orderId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'Content-Type': 'application/json', // Or 'application/x-www-form-urlencoded' if view expects that
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        // body: JSON.stringify({}) // No body needed if just order_id in URL
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // alert(data.message || 'Order closed successfully!'); // Optional alert
+                            window.location.reload(); // Reload to reflect the change
+                        } else {
+                            alert('Error: ' + (data.error || 'Could not acknowledge receipt.'));
+                            this.disabled = false;
+                            this.textContent = 'Confirm Receipt & Close Order';
+        }
+                    })
+                    .catch(error => {
+                        console.error('Error acknowledging receipt:', error);
+                        alert('An unexpected error occurred. Please try again.');
+                        this.disabled = false;
+                        this.textContent = 'Confirm Receipt & Close Order';
+                    });
+                });
+    }
+    
+            // Helper function to get CSRF cookie (if not using hidden input)
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+                        }
+        }
+    }
+                return cookieValue;
+                    }
+        });
+</script>
+</body>
+</html>

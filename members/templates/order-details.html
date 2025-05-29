@@ -1,0 +1,938 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{{ page_title|default:"Your Cart" }} - Golden Bites</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-brand-color: #FF6600; /* Foodpanda-like Orange */
+            --primary-action-color: #00A877; /* A modern green for actions */
+            --text-color-dark: #2d2d2d;
+            --text-color-medium: #555;
+            --text-color-light: #777;
+            --border-color-soft: #e0e0e0;
+            --background-color-page: #f7f7f7;
+            --background-color-card: #ffffff;
+            --danger-color: #dc3545;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--background-color-page);
+            color: var(--text-color-dark);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .app-container {
+            max-width: 560px;
+            margin: 0 auto;
+            background-color: var(--background-color-page);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            /* Adjust padding-bottom if summary bar and nav bar heights change */
+            padding-bottom: 140px; /* Space for summary bar + nav bar */
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: var(--background-color-card);
+            position: sticky;
+            top: 0;
+            left: 0; /* For sticky positioning within app-container */
+            right: 0; /* For sticky positioning within app-container */
+            /* max-width: 600px; Should inherit from app-container or be managed by its placement */
+            z-index: 1000;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .top-bar .back-button {
+            font-size: 20px;
+            color: var(--text-color-dark);
+            text-decoration: none;
+            margin-right: 15px;
+        }
+        .top-bar .page-title-main {
+            flex-grow: 1;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color-dark);
+            /* Quick fix for centering with back button */
+            transform: translateX(-10px); 
+        }
+         .top-bar .placeholder-right {
+            width: 24px; 
+        }
+
+        .order-details-content {
+            padding: 20px 15px;
+            flex-grow: 1;
+        }
+
+        .page-header { /* Replaces .section-title for the main page title */
+            font-size: 1.5rem; /* Larger page title */
+            font-weight: 700;
+            color: var(--text-color-dark);
+            margin-bottom: 20px;
+        }
+
+        .cart-items-container {
+            background-color: var(--background-color-card);
+            border-radius: 12px; /* Softer radius */
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* Softer shadow */
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: flex-start; /* Align items to the top */
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border-color-soft);
+        }
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+        .cart-item-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 1px solid var(--border-color-soft);
+        }
+        .cart-item-details { /* Wrapper for info and price */
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .item-info .product-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-color-dark);
+            margin-bottom: 4px;
+        }
+        .item-info .stall-name {
+            font-size: 0.8rem;
+            color: var(--text-color-light);
+            margin-bottom: 6px;
+        }
+        .item-info .product-price { /* Price per item */
+            font-size: 0.85rem;
+            color: var(--text-color-medium);
+            margin-bottom: 8px;
+        }
+         .item-info .item-subtotal { /* Subtotal for this item row - optional */
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-color-dark);
+            margin-top: auto; /* Pushes to bottom if item-details is flex-column */
+        }
+
+
+        .item-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: space-between; /* Distributes quantity and delete */
+            margin-left:10px; /* Space from item-info */
+            min-height: 80px; /* Align with image height */
+        }
+
+        .item-quantity-controls {
+            display: flex;
+            align-items: center;
+            background-color: var(--background-color-page); /* Light bg for the control group */
+            border-radius: 20px; /* Rounded capsule shape */
+            padding: 4px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .item-quantity-controls button.qty-btn {
+            background-color: var(--background-color-card);
+            color: var(--primary-action-color);
+            border: 1px solid var(--border-color-soft);
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 1rem; /* Icon size */
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .item-quantity-controls button.qty-btn:hover {
+            background-color: var(--primary-action-color);
+            color: white;
+            border-color: var(--primary-action-color);
+        }
+        .item-quantity-controls .quantity-input {
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 0 8px;
+            width: 20px; /* Adjust as needed */
+            text-align: center;
+            border: none;
+            background-color: transparent; /* Input field is transparent within the capsule */
+            color: var(--text-color-dark);
+            outline: none;
+        }
+
+        .delete-item-btn {
+            background-color: transparent;
+            color: var(--danger-color);
+            border: none;
+            border-radius: 4px;
+            padding: 5px;
+            font-size: 0.8rem; /* Text part if any */
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s, background-color 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        .delete-item-btn .fas {
+            font-size: 1rem; /* Icon size */
+        }
+        .delete-item-btn:hover {
+            color: white;
+            background-color: var(--danger-color);
+        }
+         .delete-item-btn span { /* If you have text next to icon */
+            margin-left: 4px;
+            font-size: 0.8rem;
+        }
+
+
+        .empty-cart-message {
+            text-align: center;
+            padding: 50px 20px;
+            background-color: var(--background-color-card);
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .empty-cart-message .empty-cart-icon {
+            font-size: 3rem;
+            color: var(--border-color-soft);
+            margin-bottom: 15px;
+        }
+        .empty-cart-message p {
+            font-size: 1.1rem;
+            color: var(--text-color-medium);
+            margin-bottom: 5px;
+        }
+        .empty-cart-message .subtext {
+            font-size: 0.9rem;
+            color: var(--text-color-light);
+        }
+
+
+        /* Bottom Summary Bar */
+        .bottom-summary-bar {
+            position: fixed;
+            bottom: 60px; /* Default space for standard nav bar */
+            left: 0;
+            right: 0;
+            max-width: 560px;
+            margin: 0 auto; 
+            background-color: var(--background-color-card); 
+            padding: 15px 20px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border-color-soft);
+            /* border-top-left-radius: 16px;  Removed for full-width feel */
+            /* border-top-right-radius: 16px; */
+            z-index: 999; /* Just below top-bar, above bottom-nav */
+        }
+        .total-info {
+             text-align: left;
+        }
+        .total-info .total-label {
+            font-size: 0.9rem;
+            color: var(--text-color-light);
+            margin-bottom: 2px;
+        }
+        .total-info .total-price {
+            font-size: 1.25rem;
+            font-weight: 700; /* Bolder total */
+            color: var(--text-color-dark); 
+        }
+        .process-payment-btn {
+            background-color: var(--primary-brand-color); 
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 25px; /* More padding */
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            display: flex; /* For icon inside if needed */
+            align-items: center;
+            justify-content: center;
+            /* min-width: 180px; */ /* Ensure button is wide enough */
+        }
+        .process-payment-btn:hover {
+            background-color: #e65c00; /* Darker orange */
+        }
+        .process-payment-btn.disabled {
+            background-color: #ccc;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        /* For messages */
+        .messages-container {
+            padding: 0 15px;
+            margin-top: 10px; /* Space from top bar */
+            margin-bottom: 10px; /* Space before content */
+        }
+        .messages-container .alert {
+            padding: 12px 18px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .messages-container .alert i { /* For an icon in message */
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        .alert-success {
+            color: #0f5132;
+            background-color: #d1e7dd;
+            border: 1px solid #badbcc;
+        }
+        .alert-error { /* Renamed from alert-danger for consistency */
+            color: #842029;
+            background-color: #f8d7da;
+            border: 1px solid #f5c2c7;
+        }
+
+        /* Bottom Navigation Bar */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0; /* Adjusted padding */
+            background-color: var(--background-color-card);
+            border-top: 1px solid var(--border-color-soft);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 600px;
+            margin: 0 auto;
+            z-index: 1000; /* Ensure it's on top or same as top-bar */
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.75rem; /* Slightly smaller text */
+            color: var(--text-color-medium);
+            cursor: pointer;
+            text-decoration: none;
+            padding: 5px; /* Padding for tap area */
+            flex: 1; /* Distribute space */
+            text-align: center;
+        }
+        .nav-icon {
+            margin-bottom: 4px;
+            font-size: 1.25rem; /* Icon size */
+        }
+        .nav-item.active {
+            color: var(--primary-brand-color); /* Active color to brand */
+        }
+        .nav-item.active .nav-icon {
+             color: var(--primary-brand-color);
+            }
+            
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="top-bar">
+            <a href="javascript:history.back()" class="back-button"><i class="fas fa-arrow-left"></i></a>
+            <span class="page-title-main">{{ page_title|default:"Your Cart" }}</span>
+            <div class="placeholder-right"></div> <!-- To balance the back button -->
+        </div>
+
+        <!-- Django Messages -->
+        {% if messages %}
+        <div class="messages-container" id="messages-container">
+            {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags %}alert-{{ message.tags }}{% endif %}" role="alert">
+                {% if message.tags == 'success' %}<i class="fas fa-check-circle"></i>{% endif %}
+                {% if message.tags == 'error' %}<i class="fas fa-exclamation-circle"></i>{% endif %}
+                {{ message }}
+            </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+        
+        <div class="order-details-content">
+            <h2 class="page-header">Your Cart</h2>
+        
+            {% if cart_items %}
+                <div class="cart-items-container">
+                    {% for item in cart_items %}
+                    <div class="cart-item" data-product-id="{{ item.id }}">
+                        <img src="{{ item.image_url|default_if_none:'' }}" alt="{{ item.name }}" class="cart-item-image" onerror="this.src='{% static 'img/placeholder_food_alt.png' %}'">
+                        <div class="cart-item-details">
+                            <div class="item-info">
+                                <h3 class="product-name">{{ item.name }}</h3>
+                                <p class="stall-name">{{ item.stall_name }}</p>
+                                <p class="product-price">₱<span class="product-price-value">{{ item.price|floatformat:2|intcomma }}</span> / item</p>
+                            </div>
+                            <p class="item-subtotal">Subtotal: ₱<span class="item-subtotal-value">{{ item.item_total|floatformat:2|intcomma }}</span></p>
+                        </div>
+                        <div class="item-actions">
+                            <div class="item-quantity-controls">
+                                <button class="qty-btn" data-action="decrease"><i class="fas fa-minus"></i></button>
+                                <span class="quantity-input">{{ item.quantity }}</span>
+                                <button class="qty-btn" data-action="increase"><i class="fas fa-plus"></i></button>
+                            </div>
+                            <a href="{% url 'remove_from_cart' item.id %}" class="delete-item-btn" data-product-id="{{ item.id }}" title="Remove item">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="bottom-summary-bar">
+                    <div class="summary-text">
+                        Total (<span id="total-items-count">{{ cart_items|length }}</span> item{{ cart_items|length|pluralize }}):
+                        <strong id="grand-total-amount">₱{{ total_cart_price|floatformat:2|intcomma }}</strong>
+                    </div>
+                    <a href="{% url 'payment' %}" class="btn-proceed" id="proceed-to-payment-btn">
+                        Proceed to Payment
+                        <span id="proceed-button-amount">₱{{ total_cart_price|floatformat:2|intcomma }}</span>
+                    </a>
+                    </div>
+                
+            {% else %}
+                <div class="empty-cart-message" id="empty-cart-msg">
+                    <div class="empty-cart-icon"><i class="fas fa-shopping-bag"></i></div>
+                    <p>Your cart is empty</p>
+                    <span class="subtext">Looks like you haven't added anything to your cart yet.</span>
+                </div>
+            {% endif %}
+                    </div>
+                    
+        {% if cart_items %}
+        <div class="bottom-summary-bar" id="bottom-summary-bar">
+            <div class="total-info">
+                <div class="total-label">Grand Total</div>
+                <div class="total-price" id="total-cart-price-display">₱{{ total_cart_price|floatformat:2 }}</div>
+            </div>
+            <a href="{% url 'payment' %}" class="process-payment-btn {% if not cart_items %}disabled{% endif %}" id="process-payment-link">
+                Proceed to Payment
+            </a>
+                </div>
+        {% else %}
+         <div class="bottom-summary-bar" id="bottom-summary-bar" style="display: none;"> <!-- Keep hidden if no items -->
+            <div class="total-info">
+                <div class="total-label">Grand Total</div>
+                <div class="total-price" id="total-cart-price-display">₱0.00</div>
+            </div>
+            <a href="{% url 'payment' %}" class="process-payment-btn disabled" id="process-payment-link">
+                Proceed to Payment
+            </a>
+        </div>
+        {% endif %}
+        
+    <nav class="bottom-nav">
+        <a href="{% url 'home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+            <div class="nav-icon">🏠</div>
+            <span>Home</span>
+        </a>
+        <a href="{% url 'order_details' %}" class="nav-item {% if request.resolver_match.url_name == 'order_details' %}active{% endif %}">
+            <div class="nav-icon">🛒</div>
+            <span>Cart</span>
+        </a>
+        <a href="{% url 'shops_list' %}" class="nav-item {% if request.resolver_match.url_name == 'shops_list' %}active{% endif %}">
+             <div class="nav-icon">🛍️</div>
+            <span>Shops</span>
+        </a>
+        <a href="{% url 'favorites' %}" class="nav-item {% if request.resolver_match.url_name == 'favorites' %}active{% endif %}">
+            <div class="nav-icon">❤️</div>
+            <span>Favorites</span>
+        </a>
+        <a href="{% url 'notifications' %}" class="nav-item {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+            <div class="nav-icon">
+                🔔
+                {# {% notification_badge %} #}
+            </div>
+            <span>Notifications</span>
+        </a>
+    </nav>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const csrfToken = "{{ csrf_token }}";
+
+        document.querySelectorAll('.cart-item').forEach(itemRow => {
+            const productId = itemRow.dataset.productId;
+            const unitPrice = parseFloat(itemRow.dataset.unitPrice);
+            const quantityInput = itemRow.querySelector('.quantity-input');
+            const minusBtn = itemRow.querySelector('.qty-btn.minus');
+            const plusBtn = itemRow.querySelector('.qty-btn.plus');
+            const deleteBtn = itemRow.querySelector('.delete-item-btn');
+            const subtotalValueEl = itemRow.querySelector('.subtotal-value');
+
+            function updateQuantityOnServer(newQuantity) {
+                // Prevent quantity from going below 1
+                if (newQuantity < 1) {
+                    // Optionally, provide feedback or simply do nothing further for minus button
+                    // For direct input (if it were enabled), you might reset to 1.
+                    return; 
+                }
+
+                fetch(`/cart/update/${productId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest' 
+                    },
+                    body: `quantity=${newQuantity}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        quantityInput.value = newQuantity;
+                        if(subtotalValueEl) { // Check if subtotal element exists
+                           subtotalValueEl.textContent = (unitPrice * newQuantity).toFixed(2);
+                        }
+                        updateCartTotal();
+                        // displayMessage('Cart updated successfully.', 'success'); // Optional: can be too noisy
+                    } else {
+                        displayMessage(data.message || 'Failed to update quantity.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating quantity:', error);
+                    displayMessage('Error updating cart. Please try again.', 'error');
+            });
+        }
+
+            minusBtn.addEventListener('click', () => {
+                let currentQuantity = parseInt(quantityInput.value);
+                if (currentQuantity > 1) { // Only update if quantity will be >= 1
+                    updateQuantityOnServer(currentQuantity - 1);
+                }
+            });
+
+            plusBtn.addEventListener('click', () => {
+                let currentQuantity = parseInt(quantityInput.value);
+                 if (currentQuantity < 99) { // Assuming max 99
+                    updateQuantityOnServer(currentQuantity + 1);
+                }
+            });
+        
+            // Remove direct input change listener if input is readonly
+            // quantityInput.addEventListener('change', () => { ... });
+
+            deleteBtn.addEventListener('click', () => {
+                // Consider using a custom confirm modal if you have one
+                if (confirm('Are you sure you want to remove this item from your cart?')) {
+                    fetch(`/cart/remove/${productId}/`, {
+                        method: 'POST', 
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            itemRow.remove();
+                            updateCartTotal();
+                            checkIfCartIsEmpty();
+                            displayMessage('Item removed from cart.', 'success');
+                        } else {
+                            displayMessage(data.message || 'Failed to remove item.', 'error');
+                    }
+                    })
+                    .catch(error => {
+                         console.error('Error removing item:', error);
+                         displayMessage('Error removing item. Please try again.', 'error');
+                    });
+                }
+            });
+        });
+
+        function updateCartTotal() {
+            let newTotal = 0;
+            document.querySelectorAll('.cart-item').forEach(itemRow => {
+                const itemUnitPrice = parseFloat(itemRow.dataset.unitPrice);
+                const itemQuantity = parseInt(itemRow.querySelector('.quantity-input').value);
+                newTotal += itemUnitPrice * itemQuantity;
+            });
+            const totalCartPriceDisplay = document.getElementById('total-cart-price-display');
+            if (totalCartPriceDisplay) {
+                totalCartPriceDisplay.textContent = `₱${newTotal.toFixed(2)}`;
+            }
+            // Enable/disable payment button based on total
+            const paymentLink = document.getElementById('process-payment-link');
+            if (paymentLink) {
+                if (newTotal > 0) {
+                    paymentLink.classList.remove('disabled');
+                } else {
+                    paymentLink.classList.add('disabled');
+                }
+                    }
+                }
+
+        function checkIfCartIsEmpty() {
+            const cartItemsList = document.getElementById('cart-items-list'); // The container of .cart-item elements
+            const emptyMsgElement = document.getElementById('empty-cart-msg'); // The specific empty message element
+            const summaryBar = document.getElementById('bottom-summary-bar');
+            const paymentLink = document.getElementById('process-payment-link');
+            const orderDetailsContent = document.querySelector('.order-details-content'); // Parent of cart-items-container and empty-cart-msg
+
+            const hasItems = cartItemsList && cartItemsList.querySelectorAll('.cart-item').length > 0;
+
+            if (summaryBar) summaryBar.style.display = hasItems ? 'flex' : 'none';
+            if (paymentLink) {
+                if (hasItems) paymentLink.classList.remove('disabled');
+                else paymentLink.classList.add('disabled');
+            }
+            
+            const cartItemsContainer = document.getElementById('cart-items-container');
+            if (cartItemsContainer) cartItemsContainer.style.display = hasItems ? 'block' : 'none';
+
+
+            if (hasItems) {
+                if(emptyMsgElement) emptyMsgElement.style.display = 'none';
+            } else {
+                if(emptyMsgElement) {
+                    emptyMsgElement.style.display = 'block'; // Or 'flex' if it's a flex container
+                } else {
+                    // If the empty message element wasn't found (e.g. initially no items, so it wasn't in HTML)
+                    // and we want to create it dynamically:
+                    // This part is tricky if it's not already in the DOM from the Django template.
+                    // For now, assumes it's rendered by Django template if cart_items is empty.
+                }
+            }
+        }
+            
+        // Call once on load
+        updateCartTotal(); // Calculate total first
+        checkIfCartIsEmpty(); // Then check if cart is empty based on items
+
+        // Django messages auto-hide (optional)
+        setTimeout(() => {
+            const messages = document.querySelectorAll('.messages-container .alert');
+            messages.forEach(message => {
+                message.style.transition = 'opacity 0.5s ease';
+                message.style.opacity = '0';
+                setTimeout(() => message.remove(), 500);
+            });
+        }, 5000); // Hide after 5 seconds
+
+        function displayMessage(message, type = 'success') {
+            const messagesContainer = document.getElementById('messages-container') || createMessagesContainer();
+            
+            // Clear previous messages of the same type to avoid spamming
+            const existingMessages = messagesContainer.querySelectorAll(`.alert-${type}`);
+            existingMessages.forEach(msg => msg.remove());
+
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.setAttribute('role', 'alert');
+            
+            let iconClass = '';
+            if (type === 'success') iconClass = 'fas fa-check-circle';
+            else if (type === 'error') iconClass = 'fas fa-exclamation-circle';
+            // Add more types if needed (e.g., 'warning', 'info')
+            
+            if (iconClass) {
+                const iconEl = document.createElement('i');
+                iconEl.className = iconClass;
+                alertDiv.appendChild(iconEl);
+            }
+            
+            const textNode = document.createTextNode(` ${message}`); // Add space after icon
+            alertDiv.appendChild(textNode);
+
+            messagesContainer.appendChild(alertDiv);
+                
+            // Auto-hide this specific message
+            setTimeout(() => {
+                alertDiv.style.transition = 'opacity 0.5s ease';
+                alertDiv.style.opacity = '0';
+                setTimeout(() => alertDiv.remove(), 500);
+            }, 5000);
+        }
+                
+        function createMessagesContainer() {
+            let container = document.getElementById('messages-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'messages-container';
+                container.id = 'messages-container';
+                const topBar = document.querySelector('.top-bar');
+                if (topBar && topBar.parentNode) {
+                    topBar.parentNode.insertBefore(container, topBar.nextSibling);
+                    } else {
+                    // Fallback if top-bar isn't found, prepend to body or app-container
+                    document.querySelector('.app-container').prepend(container);
+                    }
+            }
+            return container;
+        }
+    });
+    </script>
+    {% load humanize %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        document.querySelectorAll('.qty-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const action = this.dataset.action; // 'increase' or 'decrease'
+                const cartItemDiv = this.closest('.cart-item');
+                const productId = cartItemDiv.dataset.productId;
+                const quantityInput = cartItemDiv.querySelector('.quantity-input');
+                let currentQuantity = parseInt(quantityInput.textContent);
+
+                if (action === 'increase') {
+                    currentQuantity++;
+                } else if (action === 'decrease') {
+                    currentQuantity--;
+                }
+
+                if (currentQuantity < 0) { // Should not happen if decrease is disabled at 0/1
+                    currentQuantity = 0;
+                }
+                
+                // If quantity is 0, redirect to remove from cart or let backend handle it
+                if (currentQuantity === 0) {
+                    // Option 1: Redirect to a remove URL (if you have one that handles GET for removal confirmation or direct removal)
+                    // window.location.href = `/remove_from_cart/${productId}/`; 
+                    // Option 2: Call update with quantity 0, backend should handle removal
+                    updateCartItemQuantity(productId, 0, cartItemDiv, quantityInput);
+                } else {
+                    updateCartItemQuantity(productId, currentQuantity, cartItemDiv, quantityInput);
+                }
+            });
+        });
+
+        function updateCartItemQuantity(productId, quantity, cartItemDiv, quantityInput) {
+            fetch(`/update_cart_item_quantity/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: `quantity=${quantity}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (quantity === 0 && data.item_removed) { // Backend confirms removal
+                        cartItemDiv.remove();
+                        showToast(data.message || 'Item removed from cart.', 'success');
+                    } else if (data.item_removed) { // If backend removed it due to quantity 0
+                         cartItemDiv.remove();
+                         showToast(data.message || 'Item removed as quantity reached zero.', 'success');
+                    }
+                    else {
+                        quantityInput.textContent = quantity;
+                        // Update item subtotal
+                        const pricePerItem = parseFloat(cartItemDiv.querySelector('.product-price-value').textContent.replace(/[^\d.-]/g, ''));
+                        const itemSubtotalElement = cartItemDiv.querySelector('.item-subtotal-value');
+                        const newSubtotal = pricePerItem * quantity;
+                        itemSubtotalElement.textContent = newSubtotal.toFixed(2);
+                        showToast(data.message || 'Cart updated successfully.', 'success');
+                    }
+                    updateCartTotals();
+                    checkEmptyCart();
+                } else {
+                    showToast(data.error || 'Failed to update quantity.', 'error');
+                    // Revert quantity display if needed or reload
+                    // For simplicity, we might just show an error. Or if backend provides old quantity:
+                    if(data.original_quantity !== undefined) {
+                        quantityInput.textContent = data.original_quantity;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error updating cart:', error);
+                showToast('An error occurred. Please try again.', 'error');
+            });
+        }
+
+        document.querySelectorAll('.delete-item-btn').forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent default link behavior
+                const cartItemDiv = this.closest('.cart-item');
+                const productId = cartItemDiv.dataset.productId;
+                
+                // Optional: Add a confirmation dialog here
+                // if (!confirm("Are you sure you want to remove this item?")) {
+                //     return;
+                // }
+
+                fetch(`/remove_from_cart/${productId}/`, {
+                    method: 'POST', // Assuming your remove_from_cart view supports POST for AJAX
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        cartItemDiv.remove();
+                        updateCartTotals();
+                        checkEmptyCart();
+                        showToast(data.message || 'Item removed successfully.', 'success');
+                    } else {
+                        showToast(data.error || 'Failed to remove item.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error removing item:', error);
+                    showToast('An error occurred while removing the item.', 'error');
+                });
+                    });
+                });
+
+        function updateCartTotals() {
+            let grandTotal = 0;
+            let totalItemsCount = 0;
+            document.querySelectorAll('.cart-item').forEach(itemDiv => {
+                const quantity = parseInt(itemDiv.querySelector('.quantity-input').textContent);
+                const pricePerItem = parseFloat(itemDiv.querySelector('.product-price-value').textContent.replace(/[^\d.-]/g, ''));
+                grandTotal += quantity * pricePerItem;
+                totalItemsCount += quantity;
+            });
+
+            const grandTotalAmountEl = document.getElementById('grand-total-amount');
+            const proceedButtonAmountEl = document.getElementById('proceed-button-amount');
+            const totalItemsCountEl = document.getElementById('total-items-count');
+
+
+            if (grandTotalAmountEl) {
+                grandTotalAmountEl.textContent = `₱${grandTotal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+            }
+            if (proceedButtonAmountEl) {
+                 proceedButtonAmountEl.textContent = `₱${grandTotal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+            }
+            if (totalItemsCountEl) {
+                totalItemsCountEl.textContent = totalItemsCount;
+            }
+            
+            // Disable/Enable proceed button based on cart content
+            const proceedButton = document.getElementById('proceed-to-payment-btn');
+            if (proceedButton) {
+                if (totalItemsCount === 0) {
+                    proceedButton.disabled = true;
+                    proceedButton.style.backgroundColor = '#ccc'; // Visually indicate disabled
+                } else {
+                    proceedButton.disabled = false;
+                    proceedButton.style.backgroundColor = ''; // Revert to original style
+                }
+            }
+        }
+        
+        function checkEmptyCart() {
+            const itemsContainer = document.querySelector('.cart-items-container');
+            const emptyCartMessage = document.querySelector('.empty-cart-message');
+            const summaryBar = document.querySelector('.bottom-summary-bar');
+            const cartItemElements = document.querySelectorAll('.cart-item');
+
+            if (cartItemElements.length === 0) {
+                if(itemsContainer) itemsContainer.style.display = 'none';
+                if(summaryBar) summaryBar.style.display = 'none';
+                if(emptyCartMessage) emptyCartMessage.style.display = 'block';
+                
+                // Adjust padding if bottom bar is hidden
+                const appContainer = document.querySelector('.app-container');
+                if(appContainer) appContainer.style.paddingBottom = '80px'; // Only nav bar height
+
+
+            } else {
+                if(itemsContainer) itemsContainer.style.display = 'block';
+                if(summaryBar) summary_bar.style.display = 'flex'; // Or original display type
+                if(emptyCartMessage) emptyCartMessage.style.display = 'none';
+
+                const appContainer = document.querySelector('.app-container');
+                if(appContainer) appContainer.style.paddingBottom = '140px'; // Original padding
+            }
+        }
+
+        // Initial call to set totals and check empty cart
+        updateCartTotals();
+        checkEmptyCart();
+
+        // Toast notification function (basic implementation)
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toast-notifications') || createToastContainer();
+                const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+                toast.textContent = message;
+                toastContainer.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 500);
+                }, 3000);
+            }, 100); // Slight delay to trigger animation
+        }
+
+        function createToastContainer() {
+            let container = document.getElementById('toast-notifications');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-notifications';
+                // Styling for toast container - adjust as needed
+                container.style.position = 'fixed';
+                container.style.top = '20px';
+                container.style.right = '20px';
+                container.style.zIndex = '2000';
+                container.style.display = 'flex';
+                container.style.flexDirection = 'column';
+                container.style.gap = '10px';
+                document.body.appendChild(container);
+            }
+            return container;
+        }
+         // CSS for toast needs to be added in <style> or external CSS
+        // Example toast CSS (add to your <style> tag or CSS file):
+        /*
+        #toast-notifications .toast {
+            background-color: #333; color: white; padding: 12px 20px; border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); opacity: 0;
+            transform: translateY(-20px); transition: opacity 0.3s ease, transform 0.3s ease;
+            font-size: 0.9rem;
+        }
+        #toast-notifications .toast.show { opacity: 1; transform: translateY(0); }
+        #toast-notifications .toast-success { background-color: #4CAF50; }
+        #toast-notifications .toast-error { background-color: #f44336; }
+        #toast-notifications .toast-info { background-color: #2196F3; }
+        */
+    });
+    </script>
+</body>
+</html>

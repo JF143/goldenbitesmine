@@ -1,0 +1,463 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{{ page_title|default:"Confirm Order" }} - Golden Bites</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-brand-color: #4a90e2; /* Blue theme */
+            --primary-brand-color-hover: #3a7bc8; /* Darker blue for hover */
+            --text-color-dark: #2d2d2d;
+            --text-color-medium: #555;
+            --text-color-light: #777;
+            --border-color-soft: #e0e0e0;
+            --border-color-medium: #cccccc;
+            --background-color-page: #f7f7f7;
+            --background-color-card: #ffffff;
+            --danger-color: #dc3545;
+            --success-color: #198754;
+            --disabled-bg-color: #e9ecef;
+            --disabled-text-color: #adb5bd;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--background-color-page);
+            color: var(--text-color-dark);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .app-container {
+            max-width: 560px; /* Standardized width */
+            margin: 0 auto;
+            background-color: var(--background-color-page);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding-bottom: 90px; /* Space for sticky bottom bar */
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background-color: var(--background-color-card);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .top-bar .back-button {
+            font-size: 1.3rem;
+            color: var(--text-color-dark);
+            text-decoration: none;
+            margin-right: 15px;
+            background: none; border: none; padding: 5px; cursor: pointer;
+        }
+        .top-bar .page-title-main {
+            flex-grow: 1;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color-dark);
+            transform: translateX(-12px); /* Adjust for back button width */
+        }
+         .top-bar .placeholder-right {
+            width: 38px; /* approx back button size */
+        }
+
+        .payment-content-area {
+            padding: 15px;
+            flex-grow: 1;
+        }
+
+        .section-title-main { /* For the main "Confirm Order" or similar title */
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-color-dark);
+        }
+
+        .card-section {
+            background-color: var(--background-color-card);
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .card-section .card-header-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-color-dark);
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color-soft);
+        }
+
+        /* Order Summary Items */
+        .order-summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 0.9rem;
+        }
+        .order-summary-item .item-name {
+            color: var(--text-color-medium);
+            flex-basis: 70%;
+        }
+        .order-summary-item .item-price {
+            color: var(--text-color-dark);
+            font-weight: 500;
+            text-align: right;
+        }
+        .order-summary-total-items {
+            font-weight: 500;
+            border-top: 1px dashed var(--border-color-medium);
+            padding-top: 10px;
+            margin-top: 5px;
+        }
+        .order-summary-item.grand-total {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-color-dark);
+            border-top: 1px solid var(--text-color-dark);
+            padding-top: 12px;
+            margin-top: 10px;
+        }
+        .order-summary-item.grand-total .item-price {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-brand-color);
+        }
+
+        /* Info Lines (Queue, Email) */
+        .info-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            padding: 6px 0;
+            color: var(--text-color-medium);
+        }
+        .info-line .label {
+            /* color: var(--text-color-light); */
+        }
+        .info-line .value {
+            color: var(--text-color-dark);
+            font-weight: 500;
+        }
+
+        /* Payment & Pickup Method Selection */
+        .method-selection-group .method-option {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background-color: var(--background-color-page);
+            border: 1px solid var(--border-color-soft);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+        .method-selection-group .method-option:hover {
+            border-color: var(--primary-brand-color-hover);
+        }
+        .method-selection-group .method-option.selected {
+            background-color: #e9f3fe; /* Light blue for selected */
+            border-color: var(--primary-brand-color);
+            box-shadow: 0 0 0 1px var(--primary-brand-color);
+        }
+        .method-selection-group .method-option input[type="radio"] {
+            appearance: none; /* Hide default radio */
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-color-medium);
+            border-radius: 50%;
+            margin-right: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .method-selection-group .method-option input[type="radio"]:checked {
+            border-color: var(--primary-brand-color);
+            background-color: var(--primary-brand-color); /* Fill color */
+            box-shadow: inset 0 0 0 3px var(--background-color-card); /* Inner circle */
+        }
+        .method-selection-group .method-option .icon {
+            font-size: 1.3rem;
+            margin-right: 12px;
+            color: var(--text-color-medium);
+            width: 25px; text-align: center;
+        }
+        .method-selection-group .method-option.selected .icon {
+            color: var(--primary-brand-color);
+        }
+        .method-selection-group .method-option .details .method-name {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-color-dark);
+        }
+        .method-selection-group .method-option .details .method-description {
+            font-size: 0.8rem;
+            color: var(--text-color-light);
+        }
+
+        /* Notes Textarea */
+        .notes-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color-soft);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            min-height: 70px;
+            resize: vertical;
+            box-sizing: border-box;
+            margin-top: 5px;
+            background-color: var(--background-color-page);
+        }
+        .notes-textarea:focus {
+            outline: none;
+            border-color: var(--primary-brand-color);
+            background-color: var(--background-color-card);
+        }
+
+        /* Bottom Action Bar */
+        .bottom-action-bar-payment {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 560px;
+            margin: 0 auto;
+            background-color: var(--background-color-card);
+            padding: 15px 20px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+            border-top: 1px solid var(--border-color-soft);
+            z-index: 1000;
+        }
+        .place-order-button {
+            display: block;
+            width: 100%;
+            background-color: var(--primary-brand-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .place-order-button:hover {
+            background-color: var(--primary-brand-color-hover);
+        }
+        .place-order-button:disabled {
+            background-color: var(--disabled-bg-color);
+            color: var(--disabled-text-color);
+            cursor: not-allowed;
+        }
+
+        /* Django Messages */
+        .messages-container {
+            padding: 0 15px 10px 15px; /* Add padding at bottom */
+        }
+        .messages-container .alert {
+            padding: 12px 18px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .messages-container .alert i { margin-right: 10px; font-size: 1.2rem; }
+        .alert-success { color: #0f5132; background-color: #d1e7dd; border: 1px solid #badbcc; }
+        .alert-error { color: #842029; background-color: #f8d7da; border: 1px solid #f5c2c7; }
+        .alert-warning { color: #664d03; background-color: #fff3cd; border: 1px solid #ffecb5; }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="top-bar">
+            <a href="{% url 'order_details' %}" class="back-button" aria-label="Back to Cart">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="page-title-main">{{ header_title|default:"Confirm Order" }}</h1>
+            <div class="placeholder-right"></div>
+        </header>
+
+        {% if messages %}
+        <div class="messages-container" id="messages-container-django">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                {% if message.tags == 'success' %}<i class="fas fa-check-circle"></i>
+                {% elif message.tags == 'error' %}<i class="fas fa-times-circle"></i>
+                {% elif message.tags == 'warning' %}<i class="fas fa-exclamation-triangle"></i>
+                {% endif %}
+                {{ message }}
+            </div>
+            {% endfor %}
+                </div>
+        {% endif %}
+
+        <main class="payment-content-area">
+            <form method="POST" action="{% url 'place_order' %}" id="payment-form">
+                {% csrf_token %}
+                <input type="hidden" name="queue_number" value="{{ queue_number }}">
+                
+                <section class="card-section general-info">
+                    <h2 class="card-header-title">Order Details</h2>
+                    <div class="info-line">
+                        <span class="label">Queue Number:</span>
+                        <span class="value">{{ queue_number|default:"N/A" }}</span>
+                </div>
+                    <div class="info-line">
+                        <span class="label">Date:</span>
+                        <span class="value">{{ current_date_formatted|default:"N/A" }}</span>
+                    </div>
+                     <div class="info-line">
+                        <span class="label">Email:</span>
+                        <span class="value">{{ user_email|default:"N/A" }}</span>
+                    </div>
+                </section>
+
+                <section class="card-section order-summary-details">
+                    <h2 class="card-header-title">Summary</h2>
+                    {% if cart_items_summary %}
+                        {% for item in cart_items_summary %}
+                        <div class="order-summary-item">
+                            <span class="item-name">{{ item.name }} (x{{ item.quantity }})</span>
+                            <span class="item-price">₱{{ item.item_total|intcomma }}</span>
+                        </div>
+                        {% endfor %}
+                        <div class="order-summary-item order-summary-total-items">
+                            <span class="item-name">Subtotal ({{ item_count }} item{{ item_count|pluralize }}):</span>
+                            <span class="item-price">₱{{ total_cart_price|intcomma }}</span>
+                        </div>
+                        <!-- Add Delivery Fee / Other charges here if applicable -->
+                        <div class="order-summary-item grand-total">
+                            <span class="item-name">Grand Total:</span>
+                            <span class="item-price">₱{{ total_cart_price|intcomma }}</span>
+                        </div>
+                    {% else %}
+                        <p>Your cart is empty.</p>
+                    {% endif %}
+                </section>
+
+                <section class="card-section payment-methods">
+                    <h2 class="card-header-title">Payment Method</h2>
+                    <div class="method-selection-group" id="payment-method-group">
+                        <label class="method-option" data-value="Cash">
+                            <input type="radio" name="payment_method" value="Cash" checked>
+                            <span class="icon"><i class="fas fa-money-bill-wave"></i></span>
+                            <div class="details">
+                                <span class="method-name">Cash on Delivery/Pickup</span>
+                                <span class="method-description">Pay when you receive your order.</span>
+                        </div>
+                        </label>
+                        <label class="method-option" data-value="GCash">
+                            <input type="radio" name="payment_method" value="GCash">
+                             <span class="icon"><i class="fas fa-mobile-alt"></i></span> <!-- Generic mobile for GCash -->
+                            <div class="details">
+                                <span class="method-name">GCash</span>
+                                <span class="method-description">Pay with your GCash wallet.</span>
+                        </div>
+                        </label>
+                        <!-- Add other payment methods like Card if needed -->
+                    </div>
+                </section>
+
+                <section class="card-section pickup-delivery-methods">
+                    <h2 class="card-header-title">Fulfilment Method</h2>
+                    <div class="method-selection-group" id="pickup-method-group">
+                        <label class="method-option" data-value="Pickup">
+                            <input type="radio" name="pickup_method" value="pickup" checked>
+                            <span class="icon"><i class="fas fa-store"></i></span>
+                            <div class="details">
+                                <span class="method-name">Pickup</span>
+                                <span class="method-description">Collect your order at the stall.</span>
+                </div>
+                        </label>
+                        <label class="method-option" data-value="Delivery">
+                            <input type="radio" name="pickup_method" value="delivery">
+                            <span class="icon"><i class="fas fa-motorcycle"></i></span>
+                            <div class="details">
+                                <span class="method-name">Delivery</span>
+                                <span class="method-description">Have your order delivered to you. (Fee may apply)</span>
+                </div>
+                        </label>
+                    </div>
+                </section>
+
+                <section class="card-section order-notes">
+                    <h2 class="card-header-title">Optional Note</h2>
+                    <textarea name="order_note" class="notes-textarea" placeholder="Add any special requests for your order (e.g., less sugar, no onions, specific pickup time)"></textarea>
+                </section>
+            </form>
+        </main>
+    
+        <div class="bottom-action-bar-payment">
+            <button type="submit" form="payment-form" class="place-order-button" {% if not cart_items_summary %}disabled{% endif %}>
+                Place Order (Total: ₱{{ total_cart_price|intcomma }})
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        // Payment and Pickup Method Selection Highlighting
+        function handleMethodSelection(groupElement) {
+            const options = groupElement.querySelectorAll('.method-option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove 'selected' from all options in this group
+                    options.forEach(opt => opt.classList.remove('selected'));
+                    // Add 'selected' to the clicked option
+                    this.classList.add('selected');
+                    // Ensure the radio button inside is checked
+                    const radio = this.querySelector('input[type="radio"]');
+                    if (radio) radio.checked = true;
+            });
+            
+                // Initial check for pre-selected radios
+                const radio = option.querySelector('input[type="radio"]');
+                if (radio && radio.checked) {
+                    option.classList.add('selected');
+                }
+            });
+            }
+
+        const paymentMethodGroup = document.getElementById('payment-method-group');
+        if (paymentMethodGroup) {
+            handleMethodSelection(paymentMethodGroup);
+        }
+
+        const pickupMethodGroup = document.getElementById('pickup-method-group');
+        if (pickupMethodGroup) {
+            handleMethodSelection(pickupMethodGroup);
+                }
+                
+        // Auto-hide Django messages
+        setTimeout(() => {
+            const messages = document.querySelectorAll('#messages-container-django .alert');
+            messages.forEach(message => {
+                message.style.transition = 'opacity 0.5s ease';
+                message.style.opacity = '0';
+                setTimeout(() => message.remove(), 500);
+            });
+        }, 7000); // Display for 7 seconds
+    });
+    </script>
+</body>
+</html>

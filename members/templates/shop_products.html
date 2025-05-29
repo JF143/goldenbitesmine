@@ -1,0 +1,466 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title|default:"Shop Products - Golden Bites" }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    /* Global CSS Variables - consider moving to a base.css if not already done */
+    :root {
+        --primary-brand-color: #4a90e2;
+        --primary-action-color: #00A877;
+        --text-color-dark: #2d2d2d;
+        --text-color-medium: #555;
+        --text-color-light: #777;
+        --border-color-soft: #e0e0e0;
+        --background-color-page: #f7f7f7;
+        --background-color-card: #ffffff;
+        --danger-color: #dc3545;
+        --star-color: #ffc107; /* Added for ratings consistency */
+    }
+
+    /* Styles specific to shop_products.html - can be moved to a CSS file */
+    /* Adopt styles from home.html or product-detail.html for consistency */
+    body {
+        background-color: var(--background-color-page, #f7f7f7);
+        font-family: 'Inter', sans-serif;
+    }
+    .app-container {
+        max-width: 560px; /* Consistent with other customer-facing pages */
+        margin: 0 auto;
+        background-color: var(--background-color-page);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        padding-bottom: 70px; /* Adjust if nav height is different, approx height of nav */
+    }
+
+    /* Top Bar for shop products page */
+    .top-bar {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        background-color: var(--background-color-card, #ffffff);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .top-bar .back-button {
+        font-size: 1.3rem;
+        color: var(--text-color-dark, #2d2d2d);
+        text-decoration: none;
+        margin-right: 15px;
+        background: none; border: none; padding: 5px; cursor: pointer;
+    }
+    .top-bar .page-title-main {
+        flex-grow: 1;
+        text-align: center;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-color-dark, #2d2d2d);
+        /* Adjust if back button causes centering issues */
+        transform: translateX(-12px); 
+    }
+     .top-bar .placeholder-right { /* To balance the back button if title is centered */
+        width: 38px; /* Approx size of back button + margin */
+    }
+
+
+    .shop-header-info {
+        padding: 15px;
+        background-color: var(--background-color-card, #fff);
+        margin-bottom: 15px;
+        text-align: center; /* Or left, depending on design */
+        border-bottom: 1px solid var(--border-color-soft, #e0e0e0);
+    }
+    .shop-header-info h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-color-dark, #2d2d2d);
+        margin-bottom: 5px;
+    }
+    .shop-header-info p {
+        font-size: 0.9rem;
+        color: var(--text-color-medium, #555);
+    }
+    /* Add placeholder for shop image if available */
+    .shop-image-placeholder {
+        width: 100px;
+        height: 100px;
+        background-color: #e0e0e0;
+        border-radius: 8px;
+        margin: 0 auto 10px auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #aaa;
+    }
+
+    .main-content-shop-products {
+        padding: 0 15px 80px 15px; /* Padding for content, space for bottom nav */
+        flex-grow: 1;
+    }
+
+    /* Search Bar (initial styling, will be enhanced) */
+    .search-bar-container {
+        display: flex;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        overflow: hidden;
+        background-color: var(--background-color-card, #fff);
+        border: 1px solid var(--border-color-soft, #e0e0e0);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .search-bar-container input[type="search"] {
+        flex-grow: 1;
+        border: none;
+        padding: 12px 15px;
+        font-size: 0.9rem;
+        outline: none;
+        background-color: transparent;
+    }
+    .search-bar-container button {
+        border: none;
+        background-color: transparent;
+        color: var(--primary-brand-color, #FF6600); /* Assuming orange from home */
+        padding: 0 15px;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    /* Category Filter Styles */
+    .category-filter-container {
+        margin-bottom: 20px;
+        padding: 10px 0;
+        display: flex;
+        overflow-x: auto; /* Allows horizontal scrolling for many categories */
+        white-space: nowrap; /* Prevents wrapping of category buttons */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        scrollbar-width: none; /* Firefox */
+    }
+    .category-filter-container::-webkit-scrollbar { /* Chrome, Safari, Opera */
+        display: none;
+    }
+    .category-filter-container .category-button {
+        display: inline-block;
+        padding: 8px 15px;
+        margin-right: 10px;
+        border-radius: 20px;
+        background-color: var(--background-color-card, #fff);
+        border: 1px solid var(--border-color-soft, #e0e0e0);
+        color: var(--text-color-medium, #555);
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+    .category-filter-container .category-button:hover {
+        background-color: #f0f0f0;
+        border-color: #ccc;
+    }
+    .category-filter-container .category-button.active {
+        background-color: var(--primary-brand-color, #FF6600);
+        color: #fff;
+        border-color: var(--primary-brand-color, #FF6600);
+        font-weight: 600;
+    }
+    .category-filter-container .category-button:last-child {
+        margin-right: 0;
+    }
+
+    /* Product Grid - reuse styles from home.html or similar */
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    @media (min-width: 400px) {
+        .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        }
+    }
+    .product-card { /* Basic styling, ensure this matches your home page product cards */
+        background-color: var(--background-color-card, #ffffff);
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .product-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 12px rgba(0,0,0,0.1);
+    }
+    .product-card-image-container {
+        width: 100%;
+        padding-top: 75%; /* 4:3 Aspect Ratio */
+        position: relative;
+        background-color: #f0f0f0;
+    }
+    .product-card-image-container img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+     .product-card-image-container .placeholder-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2.5rem;
+        color: #ccc;
+    }
+    .product-info {
+        padding: 10px 12px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .product-info .name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-height: 2.4em; /* Approx 2 lines */
+    }
+    .product-info .price {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-color-dark, #2d2d2d);
+        margin-top: 8px;
+    }
+    /* Rating - if you plan to add it */
+    .product-info .rating {
+        font-size: 0.8rem;
+        color: var(--text-color-medium, #555);
+    }
+     .product-info .rating .fa-star {
+        color: var(--star-color, #ffc107);
+        margin-right: 2px;
+    }
+
+
+    .no-items-message { /* Reused from home.html */
+        text-align: center;
+        color: var(--text-color-medium, #555);
+        padding: 40px 20px;
+        background-color: var(--background-color-card, #fff);
+        border-radius: 12px;
+        margin: 20px 0;
+        border: 1px dashed var(--border-color-soft, #e0e0e0);
+    }
+    .no-items-message .empty-icon {
+        font-size: 3rem;
+        color: var(--border-color-soft, #e0e0e0);
+        margin-bottom: 15px;
+    }
+    .no-items-message p {
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+    }
+    .no-items-message .subtext {
+        font-size: 0.9rem;
+        color: var(--text-color-light, #777);
+    }
+
+    /* Bottom Navigation Bar Styles (copied from shops-list.html for consistency) */
+    .bottom-nav {
+        display: flex;
+        justify-content: space-around;
+        padding: 10px 0;
+        background-color: var(--background-color-card);
+        border-top: 1px solid var(--border-color-soft);
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-width: 560px; /* Adjusted to match app-container max-width for this page */
+        margin: 0 auto;
+        z-index: 1000;
+    }
+    .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 0.75rem;
+        color: var(--text-color-medium);
+        cursor: pointer;
+        text-decoration: none;
+        padding: 5px;
+        flex: 1;
+        text-align: center;
+    }
+    .nav-icon {
+        margin-bottom: 4px;
+        font-size: 1.25rem;
+    }
+    .nav-item.active {
+        color: var(--primary-brand-color);
+    }
+    .nav-item.active .nav-icon {
+        color: var(--primary-brand-color);
+    }
+
+</style>
+</head>
+<body>
+<div class="app-container">
+    <header class="top-bar">
+        <a href="{% url 'shops_list' %}" class="back-button" aria-label="Back to Shops">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="page-title-main">{{ food_stall.stall_name }}</h1>
+        <div class="placeholder-right"></div>
+    </header>
+
+    <div class="shop-header-info">
+        {# Add shop image here if food_stall model has an image field #}
+        {# <div class="shop-image-placeholder"><i class="fas fa-store"></i></div> #}
+        <h1>{{ food_stall.stall_name }}</h1>
+        <p>Browse products from this shop.</p> {# Add more details like address, opening hours if available #}
+    </div>
+    
+    <main class="main-content-shop-products">
+        <div class="search-bar-container">
+            <input type="search" id="shopProductSearchInput" placeholder="Search in {{ food_stall.stall_name }}...">
+            <button type="button" id="shopProductSearchButton"><i class="fas fa-search"></i></button>
+        </div>
+
+        {% if categories %}
+        <div class="category-filter-container">
+            <a href="{% url 'shop_products' stall_owner_id=food_stall.owner_id %}" 
+               class="category-button {% if selected_category == 'All' %}active{% endif %}">
+                All
+            </a>
+            {% for category in categories %}
+            <a href="{% url 'shop_products' stall_owner_id=food_stall.owner_id %}?category={{ category|urlencode }}" 
+               class="category-button {% if selected_category == category %}active{% endif %}">
+                {{ category }}
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if products %}
+            <div class="product-grid">
+                {% for product in products %}
+                <a href="{% url 'product_detail' product.id %}" class="product-card" data-product-name="{{ product.product_name|lower }}" data-product-description="{{ product.details|lower|default_if_none:'' }}">
+                    <div class="product-card-image-container">
+                        {% if product.image_url %}
+                            <img src="{{ product.image_url }}" alt="{{ product.product_name }}">
+                        {% else %}
+                            <i class="fas fa-utensils placeholder-icon"></i>
+                        {% endif %}
+                    </div>
+                    <div class="product-info">
+                        <div>
+                            <h4 class="name">{{ product.product_name }}</h4>
+                            {# Stall name is redundant here as we are on the stall's page #}
+                        </div>
+                        <p class="price">₱{{ product.unit_price|floatformat:2 }}</p>
+                        {# Add rating here if available #}
+                        {# <span class="rating"><i class="fas fa-star"></i> 4.5</span> #}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-items-message">
+                <div class="empty-icon"><i class="fas fa-store-slash"></i></div>
+                <p>No Products Available</p>
+                <span class="subtext">This shop currently has no products listed.</span>
+            </div>
+        {% endif %}
+        <div id="noSearchResultsMessage" class="no-items-message" style="display: none;">
+             <div class="empty-icon"><i class="fas fa-search-minus"></i></div>
+             <p>No Products Match Your Search</p>
+             <span class="subtext">Try a different search term.</span>
+        </div>
+    </main>
+
+    {% include 'bottom_nav.html' %} {# Assuming you have a standard bottom nav #}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('shopProductSearchInput');
+    const searchButton = document.getElementById('shopProductSearchButton');
+    const productGrid = document.querySelector('.product-grid');
+    const allProductCards = productGrid ? Array.from(productGrid.querySelectorAll('.product-card')) : [];
+    const noResultsMessage = document.getElementById('noSearchResultsMessage');
+    const originalNoProductsMessage = document.querySelector('.main-content-shop-products .no-items-message:not(#noSearchResultsMessage)');
+
+    function filterShopProducts() {
+        if (!productGrid) return; // No products to filter
+
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        let visibleCount = 0;
+
+        allProductCards.forEach(card => {
+            const productName = card.dataset.productName || '';
+            // Add other attributes to search if needed, e.g., product.category
+            // const productDescription = card.dataset.productDescription || '';
+
+            if (productName.includes(searchTerm) /* || productDescription.includes(searchTerm) */) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        if (visibleCount === 0 && searchTerm !== '') {
+            productGrid.style.display = 'none';
+            if (originalNoProductsMessage) originalNoProductsMessage.style.display = 'none';
+            noResultsMessage.style.display = 'block';
+        } else if (allProductCards.length > 0) {
+            productGrid.style.display = 'grid'; // Or your default display for grid
+            noResultsMessage.style.display = 'none';
+            if (originalNoProductsMessage) originalNoProductsMessage.style.display = visibleCount > 0 ? 'none' : 'block';
+
+        } else { // No products at all initially
+            productGrid.style.display = 'none';
+            noResultsMessage.style.display = 'none';
+            if (originalNoProductsMessage) originalNoProductsMessage.style.display = 'block';
+        }
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', filterShopProducts);
+    }
+    if (searchButton) { // Optional: if you want the button to also trigger filter
+        searchButton.addEventListener('click', filterShopProducts);
+    }
+
+    // Initial state for messages
+    if (allProductCards.length === 0 && originalNoProductsMessage) {
+        if(productGrid) productGrid.style.display = 'none';
+        originalNoProductsMessage.style.display = 'block';
+    } else if (originalNoProductsMessage) {
+         originalNoProductsMessage.style.display = 'none';
+    }
+    if(noResultsMessage) noResultsMessage.style.display = 'none';
+
+});
+</script>
+</body>
+</html> 

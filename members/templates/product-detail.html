@@ -1,0 +1,581 @@
+{% load static %}
+{% load humanize %} {# For currency and other formatting #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{{ product.product_name|default:"Product Details" }} - Golden Bites</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-brand-color: #4a90e2; /* Main blue for theme */
+            --primary-brand-color-hover: #3a7bc8; /* Darker blue for hover */
+            --primary-action-color: #007bff; /* Complementary blue for other actions */
+            --text-color-dark: #2d2d2d;
+            --text-color-medium: #555;
+            --text-color-light: #777;
+            --border-color-soft: #e0e0e0;
+            --background-color-page: #f7f7f7;
+            --background-color-card: #ffffff;
+            --danger-color: #dc3545;
+            --star-color: #ffc107; /* Gold for stars */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--background-color-page);
+            color: var(--text-color-dark);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app-container {
+            max-width: 560px; /* Changed from 600px */
+            margin: 0 auto;
+            background-color: var(--background-color-card); /* Main background for content area */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding-bottom: 90px; /* Increased space for new sticky bottom bar */
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            max-width: 560px; /* Changed from 600px */
+            margin: 0 auto;
+            z-index: 1001; /* Above content, below modals */
+            background-color: transparent;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .top-bar.scrolled {
+            background-color: var(--background-color-card);
+            box-shadow: 0 1px 5px rgba(0,0,0,0.08);
+        }
+        .top-bar .back-button {
+            font-size: 1.3rem;
+            color: #fff; /* White initially for contrast on image */
+            background-color: rgba(0,0,0,0.35);
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: color 0.2s ease, background-color 0.2s ease;
+            border: none;
+        }
+        .top-bar.scrolled .back-button {
+            color: var(--text-color-dark);
+            background-color: transparent;
+        }
+        .top-bar .page-title-header {
+            flex-grow: 1;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color-dark);
+            opacity: 0; /* Hidden initially, shows on scroll */
+            transition: opacity 0.2s ease;
+        }
+        .top-bar.scrolled .page-title-header {
+            opacity: 1;
+        }
+        .top-bar .action-placeholder {
+             width: 38px; /* Balance the back button */
+        }
+
+        .product-image-hero {
+            width: 100%;
+            height: 320px; /* Slightly increased height */
+            object-fit: cover;
+            display: block;
+            background-color: #e9ecef; /* Placeholder color if image missing */
+        }
+
+        .content-sheet {
+            background-color: var(--background-color-card);
+            border-top-left-radius: 24px; /* Softer radius */
+            border-top-right-radius: 24px;
+            padding: 20px;
+            margin-top: -25px; /* Pull up over the image slightly */
+            position: relative;
+            z-index: 10; /* Above image but below top-bar */
+        }
+        /* Removed .pull-tab as it's not a common FoodPanda element */
+
+        .product-main-title {
+            font-size: 1.8rem; /* Larger title */
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-color-dark);
+            line-height: 1.3;
+        }
+
+        .stall-info-line {
+            font-size: 0.9rem;
+            color: var(--text-color-medium);
+            margin-bottom: 12px;
+        }
+        .stall-info-line .stall-name-link {
+            color: var(--primary-brand-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .stall-info-line .stall-name-link:hover {
+            text-decoration: underline;
+        }
+
+        .meta-info-line {
+            display: flex;
+            align-items: center;
+            gap: 15px; /* Spacing between meta items */
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: var(--text-color-medium);
+        }
+        .meta-info-line .meta-item {
+            display: flex;
+            align-items: center;
+        }
+        .meta-info-line .meta-item .fas, .meta-info-line .meta-item .far {
+            margin-right: 6px;
+            font-size: 0.85rem;
+        }
+        .meta-info-line .fa-star {
+            color: var(--star-color);
+        }
+        .meta-info-line .rating-text strong {
+            color: var(--text-color-dark);
+            font-weight: 600;
+        }
+        /* Removed .see-review-link for now, can be added back if reviews section exists */
+
+        .price-line {
+            margin-bottom: 25px;
+        }
+        .product-price-main {
+            font-size: 1.6rem; /* Prominent price */
+            font-weight: 700;
+            color: var(--text-color-dark);
+        }
+
+        .quantity-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: var(--background-color-page); /* Slightly different bg */
+            border-radius: 10px;
+        }
+        .quantity-section .quantity-label {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-color-dark);
+        }
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+        }
+        .quantity-selector button {
+            background-color: var(--primary-brand-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px; /* Standardized size */
+            height: 36px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+        .quantity-selector button:hover {
+            background-color: var(--primary-brand-color-hover); /* Use hover variable */
+            opacity: 1; /* Override opacity if hover variable is used */
+        }
+        .quantity-selector button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .quantity-selector .quantity-display {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color-dark);
+            padding: 0 18px;
+            min-width: 25px;
+            text-align: center;
+        }
+
+        .section-divider {
+            border: none;
+            border-top: 1px solid var(--border-color-soft);
+            margin: 25px 0;
+        }
+
+        .description-section .section-sub-title,
+        .ingredients-section .section-sub-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-color-dark);
+        }
+        .description-text,
+        .ingredients-text {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--text-color-medium);
+            margin-bottom: 20px;
+        }
+        .ingredients-text ul {
+            padding-left: 20px; margin-top: 5px;
+        }
+
+        /* Sticky Bottom Action Bar */
+        .bottom-action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 560px; /* Changed from 600px */
+            margin: 0 auto;   /* Reinstate to center it */
+            background-color: var(--background-color-card);
+            padding: 15px 20px;
+            box-shadow: 0 -3px 8px rgba(0,0,0,0.07);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            border-top: 1px solid var(--border-color-soft);
+        }
+        .bottom-action-bar .fav-button {
+            background-color: transparent;
+            border: 1px solid var(--border-color-soft);
+            color: var(--text-color-medium);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            width: 50px;
+            height: 50px;
+            display: flex; align-items: center; justify-content: center;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .bottom-action-bar .fav-button:hover {
+            border-color: var(--primary-brand-color);
+            color: var(--primary-brand-color);
+        }
+        .bottom-action-bar .fav-button.active .fa-heart {
+            color: var(--danger-color); /* Filled heart color */
+            font-weight: 900; /* Makes it look filled if using Font Awesome Solid */
+        }
+        .action-btn-main.add-to-cart {
+            flex-grow: 1;
+            background-color: var(--primary-brand-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .action-btn-main.add-to-cart:hover {
+            background-color: var(--primary-brand-color-hover); /* Use hover variable */
+            opacity: 1; /* Override opacity if hover variable is used */
+        }
+
+        /* Toast message */
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: var(--text-color-dark);
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 2000;
+            left: 50%;
+            bottom: 100px; /* Above bottom bar */
+            transform: translateX(-50%);
+            font-size: 0.9rem;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+        .toast.show {
+            visibility: visible;
+            -webkit-animation: toastfadein 0.5s, toastfadeout 0.5s 2.5s;
+            animation: toastfadein 0.5s, toastfadeout 0.5s 2.5s;
+        }
+        @-webkit-keyframes toastfadein {
+            from {bottom: 30px; opacity: 0;}
+            to {bottom: 100px; opacity: 1;}
+        }
+        @keyframes toastfadein {
+            from {bottom: 30px; opacity: 0;}
+            to {bottom: 100px; opacity: 1;}
+        }
+        @-webkit-keyframes toastfadeout {
+            from {bottom: 100px; opacity: 1;}
+            to {bottom: 30px; opacity: 0;}
+        }
+        @keyframes toastfadeout {
+            from {bottom: 100px; opacity: 1;}
+            to {bottom: 30px; opacity: 0;}
+        }
+
+        /* Fallback for no product */
+        .no-product-message {
+            padding: 40px 20px;
+            text-align: center;
+            }
+        .no-product-message p { font-size: 1.1rem; margin-bottom: 15px;}
+        .no-product-message a {
+            color: var(--primary-brand-color);
+            text-decoration: none; font-weight: 500;
+            }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        {% if product %}
+            <header class="top-bar" id="pageTopBar">
+                <a href="javascript:history.back()" class="back-button" aria-label="Go back">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="page-title-header" id="headerTitle">{{ product.product_name }}</div>
+                <div class="action-placeholder"></div> <!-- To balance the back button -->
+        </header>
+
+            {% if product.image_url %}
+                <img src="{{ product.image_url }}" alt="{{ product.product_name }}" class="product-image-hero">
+            {% else %}
+                <img src="{% static 'img/placeholder_food_large.png' %}" alt="Placeholder" class="product-image-hero">
+            {% endif %}
+
+            <main class="content-sheet">
+                <h1 class="product-main-title">{{ product.product_name }}</h1>
+                
+                {% if product.food_stall %}
+                <div class="stall-info-line">
+                    From <a href="#" class="stall-name-link" style="color: var(--primary-brand-color);">{{ product.food_stall.stall_name }}</a> {# Link to stall page later #}
+                </div>
+                {% endif %}
+
+                <div class="meta-info-line">
+                    <span class="meta-item rating-text">
+                        <i class="fas fa-star"></i>
+                        <strong>{{ product.rating|default_if_none:'4.5' }}</strong> 
+                        ({{ review_count_display|default_if_none:0 }}+ Reviews)
+                    </span>
+                    <span class="meta-item order-count">
+                         <i class="fas fa-shopping-bag"></i> {{ orders_display|default_if_none:0 }}+ Orders
+                    </span>
+                </div>
+
+                <div class="price-line">
+                    <span class="product-price-main">₱{{ product.unit_price|intcomma }}</span>
+                    </div>
+
+                <hr class="section-divider">
+                    
+                <section class="quantity-section">
+                    <span class="quantity-label">Quantity</span>
+                    <div class="quantity-selector">
+                        <button id="decreaseQuantity" aria-label="Decrease quantity">－</button>
+                        <input type="text" id="quantityDisplay" class="quantity-display" value="1" readonly>
+                        <button id="increaseQuantity" aria-label="Increase quantity">＋</button>
+                    </div>
+                </section>
+                
+                {% if product.details %}
+                    <hr class="section-divider">
+                    <section class="description-section">
+                        <h2 class="section-sub-title">Description</h2>
+                        <p class="description-text">{{ product.details|linebreaksbr }}</p>
+                    </section>
+                {% endif %}
+
+                {% if product.ingredients %}
+                    <hr class="section-divider">
+                    <section class="ingredients-section">
+                        <h2 class="section-sub-title">Ingredients</h2>
+                        <p class="ingredients-text">{{ product.ingredients|linebreaksbr }}</p> {# Or format as list if ingredients are comma-separated #}
+                    </section>
+                {% endif %}
+
+            </main>
+
+            <div class="bottom-action-bar">
+                <button class="fav-button" id="favButton" aria-label="Favorite">
+                    <i class="far fa-heart"></i> {# JS will toggle to 'fas fa-heart active' #}
+                </button>
+                <form id="addToCartForm" method="POST" action="{% url 'add_to_cart' product_id=product.id %}" style="flex-grow: 1; display: flex;">
+                    {% csrf_token %}
+                    <input type="hidden" name="quantity" id="formQuantityInput" value="1">
+                    <button type="submit" class="action-btn-main add-to-cart">Add to Cart</button>
+                </form>
+                    </div>
+
+        {% else %}
+            <header class="top-bar scrolled"> <!-- Show solid bar if no product -->
+                <a href="{% url 'home' %}" class="back-button" aria-label="Go back">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="page-title-header" style="opacity:1;">Product Not Found</div>
+                <div class="action-placeholder"></div>
+            </header>
+            <main class="content-sheet" style="margin-top: 60px; text-align:center;">
+                <div class="no-product-message">
+                    <p style="font-size: 1.5rem; margin-bottom:20px;"><i class="fas fa-exclamation-triangle"></i></p>
+                    <p>Sorry, the product you are looking for could not be found.</p>
+                    <a href="{% url 'home' %}">Go back to Home</a>
+            </div>
+        </main>
+        {% endif %}
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const pageTopBar = document.getElementById('pageTopBar');
+        const headerTitle = document.getElementById('headerTitle');
+        const heroImage = document.querySelector('.product-image-hero');
+        let titleVisibleThreshold = 100; // Adjust as needed
+
+        if (heroImage) {
+            titleVisibleThreshold = heroImage.offsetHeight - (pageTopBar ? pageTopBar.offsetHeight : 50) - 20; // Show title when image top is almost out of view
+        }
+
+        window.addEventListener('scroll', function() {
+            if (pageTopBar) {
+                if (window.scrollY > 50) { // Apply solid background early
+                    pageTopBar.classList.add('scrolled');
+                } else {
+                    pageTopBar.classList.remove('scrolled');
+                }
+                if (headerTitle && window.scrollY > titleVisibleThreshold) {
+                     pageTopBar.classList.add('scrolled'); // Ensure it's scrolled if title shows
+            }
+            }
+        });
+
+        // Quantity Selector Logic
+        const decreaseButton = document.getElementById('decreaseQuantity');
+        const increaseButton = document.getElementById('increaseQuantity');
+        const quantityDisplay = document.getElementById('quantityDisplay');
+        const formQuantityInput = document.getElementById('formQuantityInput');
+
+        if (decreaseButton && increaseButton && quantityDisplay && formQuantityInput) {
+            let quantity = parseInt(quantityDisplay.value);
+
+            decreaseButton.addEventListener('click', function() {
+                if (quantity > 1) {
+                    quantity--;
+                    quantityDisplay.value = quantity;
+                    formQuantityInput.value = quantity;
+                    increaseButton.disabled = false;
+                }
+                if (quantity === 1) {
+                    decreaseButton.disabled = true;
+                }
+            });
+
+            increaseButton.addEventListener('click', function() {
+                quantity++; // Allow to increment indefinitely, or set a max
+                quantityDisplay.value = quantity;
+                formQuantityInput.value = quantity;
+                decreaseButton.disabled = false;
+                // Example: Max quantity
+                // if (quantity >= 10) { increaseButton.disabled = true; }
+            });
+            // Initial state for decrease button
+            if (quantity === 1) {
+                decreaseButton.disabled = true;
+            }
+            }
+            
+        // Add to Cart Form Submission (with toast)
+        const addToCartForm = document.getElementById('addToCartForm');
+        const toastElement = document.getElementById('toast');
+
+        if (addToCartForm && toastElement) {
+            addToCartForm.addEventListener('submit', function(event) {
+                event.preventDefault(); // Prevent default form submission
+                
+                const formData = new FormData(addToCartForm);
+                fetch(addToCartForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                        'X-Requested-With': 'XMLHttpRequest' // To help Django identify AJAX
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        toastElement.textContent = data.message || "Item added to cart!";
+                        toastElement.className = "toast show success"; // Add success class for styling
+                        // Redirect to cart page after showing toast
+                        setTimeout(function() { // Add a slight delay so user can see toast
+                            window.location.href = "{% url 'order_details' %}";
+                        }, 500); // 0.5 second delay
+                    } else {
+                        toastElement.textContent = data.error || "Failed to add item.";
+                        toastElement.className = "toast show error"; // Add error class for styling
+                        // No redirect on error, just show toast and hide it after timeout
+                        setTimeout(function(){ toastElement.className = toastElement.className.replace("show", ""); }, 3000);
+                    }
+                    // Removed the general setTimeout for hiding the toast here, as it's handled per case
+                    // setTimeout(function(){ toastElement.className = toastElement.className.replace("show", ""); }, 3000);
+                })
+                .catch(error => {
+                    console.error('Error adding to cart:', error);
+                    toastElement.textContent = "An error occurred.";
+                    toastElement.className = "toast show error";
+                    setTimeout(function(){ toastElement.className = toastElement.className.replace("show", ""); }, 3000);
+                });
+            });
+        }
+            
+        // Favorite button toggle (example)
+        const favButton = document.getElementById('favButton');
+        if (favButton) {
+            favButton.addEventListener('click', function() {
+                const heartIcon = favButton.querySelector('i');
+                heartIcon.classList.toggle('far'); // Toggle outlined
+                heartIcon.classList.toggle('fas'); // Toggle solid
+                heartIcon.classList.toggle('active'); // Custom active class for color
+                // Add actual favorite/unfavorite logic here (e.g., AJAX call)
+                if (heartIcon.classList.contains('active')) {
+                     toastElement.textContent = "Added to favorites!";
+                } else {
+                     toastElement.textContent = "Removed from favorites!";
+            }
+                toastElement.className = "toast show";
+                setTimeout(function(){ toastElement.className = toastElement.className.replace("show", ""); }, 2000);
+            });
+        }
+    });
+    </script>
+</body>
+</html>

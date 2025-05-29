@@ -1,0 +1,409 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title|default:"Shops - Golden Bites" }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-brand-color: #4a90e2; /* Changed from #FF6600 to blue */
+            --primary-action-color: #007bff; /* Changed to a lighter blue for actions */
+            --text-color-dark: #2d2d2d;
+            --text-color-medium: #555;
+            --text-color-light: #777;
+            --border-color-soft: #e0e0e0;
+            --background-color-page: #f7f7f7;
+            --background-color-card: #ffffff;
+            --danger-color: #dc3545;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--background-color-page);
+            color: var(--text-color-dark);
+        }
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: var(--background-color-page);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding-bottom: 80px; /* Space for nav bar */
+        }
+        .top-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: var(--background-color-card);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .top-bar .app-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color-dark);
+        }
+
+        .main-content {
+            padding: 20px 15px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        
+        .page-header {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-color-dark);
+            margin-bottom: 20px;
+        }
+
+        .search-bar-container {
+            display: flex;
+            margin-bottom: 25px; /* Increased margin */
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: var(--background-color-card);
+            border: 1px solid var(--border-color-soft); 
+            /* Removed box-shadow as border is now prominent */
+        }
+        .search-bar-container input[type="search"] {
+            flex-grow: 1;
+            border: none; /* Remove individual border */
+            padding: 14px 18px; /* Slightly increased padding */
+            font-size: 0.95rem; /* Slightly larger font */
+            outline: none;
+            background-color: transparent;
+            color: var(--text-color-dark);
+        }
+        .search-bar-container input[type="search"]::placeholder {
+            color: var(--text-color-light);
+        }
+        .search-bar-container button {
+            border: none; /* Remove individual border */
+            border-left: 1px solid var(--border-color-soft); /* Separator line */
+            background-color: transparent; /* Align with input field */
+            color: var(--primary-brand-color);
+            padding: 0 18px; /* Slightly increased padding */
+            cursor: pointer;
+            font-size: 1.05rem; /* Slightly larger icon */
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .search-bar-container button:hover {
+            background-color: #e6f0ff; /* Light blue tint on hover */
+        }
+
+        .shop-cards-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Single column by default */
+            gap: 18px; /* Space between cards */
+        }
+
+        @media (min-width: 500px) { /* Two columns for wider screens */
+            .shop-cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .shop-card {
+            background-color: var(--background-color-card);
+            border-radius: 12px; /* Softer radius */
+            box-shadow: 0 3px 10px rgba(0,0,0,0.07); /* Slightly more defined shadow */
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .shop-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .shop-card-image-placeholder {
+            width: 100%;
+            height: 140px; /* Slightly taller */
+            background-color: #f0f0f0; /* Lighter placeholder background */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #cccccc; /* Lighter icon */
+        }
+        .shop-card-image-placeholder .fa-store {
+            font-size: 40px; /* Larger icon */
+        }
+        /* If you add actual images: */
+        .shop-card-actual-image {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+        }
+
+        .shop-card-info {
+            padding: 15px;
+        }
+        .shop-card-info h3 { /* Stall Name */
+            margin: 0 0 6px 0;
+            font-size: 1.05rem; 
+            font-weight: 600; 
+            color: var(--text-color-dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .shop-card-info p { /* Address / Cuisine */
+            margin: 0 0 4px 0;
+            font-size: 0.8rem;
+            color: var(--text-color-light);
+            line-height: 1.4;
+            height: 2.4em; /* Approx 2 lines */
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* Example placeholder for ratings/delivery info */
+        .shop-card-meta {
+            display: flex;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-color-medium);
+            margin-top: 8px;
+        }
+        .shop-card-meta .fa-star {
+            color: #ffc107; /* Yellow for star */
+            margin-right: 3px;
+        }
+         .shop-card-meta span + span {
+            margin-left: 10px;
+        }
+
+
+        .no-shops-message {
+            text-align: center;
+            color: var(--text-color-medium);
+            padding: 50px 20px;
+            background-color: var(--background-color-card);
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .no-shops-message .empty-icon {
+            font-size: 3rem;
+            color: var(--border-color-soft);
+            margin-bottom: 15px;
+        }
+        .no-shops-message p {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        .no-shops-message .subtext {
+            font-size: 0.9rem;
+            color: var(--text-color-light);
+        }
+
+        .no-search-results-message { /* Style for the new message */
+            text-align: center;
+            color: var(--text-color-medium);
+            padding: 40px 20px;
+            background-color: var(--background-color-card);
+            border-radius: 12px;
+            margin: 20px 0;
+            display: none; /* Hidden by default */
+        }
+        .no-search-results-message .empty-icon {
+            font-size: 2.5rem;
+            color: var(--border-color-soft);
+            margin-bottom: 12px;
+        }
+        .no-search-results-message p {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        /* Bottom Navigation Bar */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            background-color: var(--background-color-card);
+            border-top: 1px solid var(--border-color-soft);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 600px;
+            margin: 0 auto;
+            z-index: 1000;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-color-medium);
+            cursor: pointer;
+            text-decoration: none;
+            padding: 5px;
+            flex: 1;
+            text-align: center;
+        }
+        .nav-icon {
+            margin-bottom: 4px;
+            font-size: 1.25rem;
+        }
+        .nav-item.active {
+            color: var(--primary-brand-color);
+        }
+         .nav-item.active .nav-icon {
+             color: var(--primary-brand-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="top-bar">
+            <span class="app-name">{{ page_title|default:"Discover Shops" }}</span>
+        </div>
+
+        <div class="main-content">
+            <h1 class="page-header">All Shops</h1>
+
+            <div class="search-bar-container">
+                <input type="search" id="shopSearchInput" placeholder="Search shops by name...">
+                <button type="button" id="shopSearchButton"><i class="fas fa-search"></i></button>
+            </div>
+
+            {% if food_stalls %}
+                <div class="shop-cards-grid" id="shopCardsGrid">
+                    {% for stall in food_stalls %}
+                        <a href="{% url 'shop_products' stall_owner_id=stall.owner_id %}" class="shop-card" data-stall-name="{{ stall.stall_name|lower }}">
+                            <div class="shop-card-image-placeholder">
+                                <i class="fas fa-store"></i>
+                            </div>
+                            <div class="shop-card-info">
+                                <h3>{{ stall.stall_name }}</h3>
+                                <p>{{ stall.owner.address|default:"University Campus" }}</p>
+                                <div class="shop-card-meta">
+                                    <span><i class="fas fa-star"></i> 4.5</span>
+                                    <span><i class="fas fa-motorcycle"></i> 20-30 min</span>
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="no-shops-message">
+                    <div class="empty-icon"><i class="fas fa-store-slash"></i></div>
+                    <p>No Shops Found</p>
+                    <span class="subtext">There are currently no shops available. Please check back soon!</span>
+                </div>
+            {% endif %}
+            
+            <div class="no-search-results-message">
+                <div class="empty-icon"><i class="fas fa-search-minus"></i></div>
+                <p>No Shops Match Your Search</p>
+                <span class="subtext">Try a different search term.</span>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <a href="{% url 'home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                <div class="nav-icon">🏠</div>
+                <span>Home</span>
+            </a>
+            <a href="{% url 'order_details' %}" class="nav-item {% if request.resolver_match.url_name == 'order_details' %}active{% endif %}">
+                <div class="nav-icon">🛒</div>
+                <span>Cart</span>
+            </a>
+            <a href="{% url 'shops_list' %}" class="nav-item {% if request.resolver_match.url_name == 'shops_list' %}active{% endif %}">
+                 <div class="nav-icon">🛍️</div>
+                <span>Shops</span>
+            </a>
+            <a href="{% url 'favorites' %}" class="nav-item {% if request.resolver_match.url_name == 'favorites' %}active{% endif %}">
+                <div class="nav-icon">❤️</div>
+                <span>Favorites</span>
+            </a>
+            <a href="{% url 'notifications' %}" class="nav-item {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+                <div class="nav-icon">
+                    🔔
+                    {# {% notification_badge %} #}
+                </div>
+                <span>Notifications</span>
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('shopSearchInput');
+            const searchButton = document.getElementById('shopSearchButton');
+            const shopCardsGrid = document.querySelector('.shop-cards-grid');
+            const allShopCards = shopCardsGrid ? Array.from(shopCardsGrid.getElementsByClassName('shop-card')) : [];
+            const noShopsMessage = document.querySelector('.no-shops-message'); // Original message if no stalls
+            const noSearchResultsMessage = document.querySelector('.no-search-results-message');
+
+            function filterShops() {
+                if (!shopCardsGrid) return; // Do nothing if there's no grid (e.g. no stalls at all)
+
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                let visibleCount = 0;
+
+                allShopCards.forEach(card => {
+                    const stallNameElement = card.querySelector('.shop-card-info h3');
+                    // Use previously added data-stall-name or fallback to textContent
+                    const stallName = (stallNameElement.dataset.stallName || stallNameElement.textContent).toLowerCase();
+                    
+                    if (stallName.includes(searchTerm)) {
+                        card.style.display = ''; // Or 'flex' if that was the original display style for .shop-card
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                if (visibleCount === 0 && searchTerm !== '') {
+                    shopCardsGrid.style.display = 'none';
+                    noSearchResultsMessage.style.display = 'block';
+                } else {
+                    shopCardsGrid.style.display = ''; // Or 'grid' if that was the original
+                    noSearchResultsMessage.style.display = 'none';
+                }
+                
+                // If the main "no shops" message is visible, ensure search results message is hidden
+                if (noShopsMessage && getComputedStyle(noShopsMessage).display !== 'none') {
+                    noSearchResultsMessage.style.display = 'none';
+                    if(shopCardsGrid) shopCardsGrid.style.display = 'none'; // also hide grid if main no-shops is showing
+                }
+            }
+
+            if (searchInput && searchButton) {
+                searchInput.addEventListener('input', filterShops);
+                searchButton.addEventListener('click', filterShops);
+            }
+            
+            // Initial check in case the page loads with pre-filled search or other states
+            // However, normally we want the "no-shops-message" from Django to take precedence if it's there
+            if (shopCardsGrid) { // Only run filter if there are shops to filter
+                 // If there are no shops initially, the django message will show. 
+                 // The search filter should only apply if there *are* shops.
+            } else if (noSearchResultsMessage) {
+                noSearchResultsMessage.style.display = 'none'; // Ensure it's hidden if no shop grid at all
+            }
+
+        });
+    </script>
+</body>
+</html> 

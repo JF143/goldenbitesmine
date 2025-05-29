@@ -1,0 +1,26 @@
+<nav class="bottom-nav">
+    <a href="{% url 'home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+        <div class="nav-icon">🏠</div>
+        <span>Home</span>
+    </a>
+    <a href="{% url 'order_details' %}" class="nav-item {% if request.resolver_match.url_name == 'order_details' %}active{% endif %}">
+        <div class="nav-icon">🛒</div>
+        <span>Cart</span>
+    </a>
+    <a href="{% url 'shops_list' %}" class="nav-item {% if request.resolver_match.url_name == 'shops_list' %}active{% endif %}">
+        <div class="nav-icon">🛍️</div>
+        <span>Shops</span>
+    </a>
+    <a href="{% url 'favorites' %}" class="nav-item {% if request.resolver_match.url_name == 'favorites' %}active{% endif %}">
+        <div class="nav-icon">❤️</div>
+        <span>Favorites</span>
+    </a>
+    <a href="{% url 'notifications' %}" class="nav-item {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+        <div class="nav-icon">
+            🔔
+            {# Placeholder for notification badge logic if you add it later #}
+            {# e.g., {% if user.is_authenticated %}{% get_unread_notification_count as unread_count %}{% if unread_count > 0 %}<span class="badge">{{ unread_count }}</span>{% endif %}{% endif %} #}
+        </div>
+        <span>Notifications</span>
+    </a>
+</nav> 
