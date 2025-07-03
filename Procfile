@@ -1,1 +1,1 @@
-web: gunicorn GoldenBites.wsgi
+web: gunicorn goldenbites.wsgi
