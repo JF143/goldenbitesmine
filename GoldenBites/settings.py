@@ -101,7 +101,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',                                      # Standard for Supabase
         'USER': 'postgres.ntwsigsiqydzmddzjrci',               # Your Supabase Pooler User
-        'PASSWORD': 'goldenbites123',                            # Your actual DB PASSWORD
+        'PASSWORD': 'goldenbites143$',  # <-- Replace this!
         'HOST': 'aws-0-us-east-2.pooler.supabase.com',         # Your Supabase Pooler Host
         'PORT': '6543',                                          # Supabase Pooler Port
     }
